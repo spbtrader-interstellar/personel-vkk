@@ -161,6 +161,24 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
 .more{align-self:center;font:600 15px var(--body);padding:10px 20px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--plum);cursor:pointer}
 .more:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 .soon{background:var(--soft);border-radius:12px;padding:14px;color:var(--muted)}
+.panel{border-radius:14px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
+.panel.plan{background:var(--wait-bg)}
+.panel.rec{background:var(--go-bg)}
+.panel h3{display:flex;align-items:center;gap:8px;margin:0;font-size:17px;color:var(--ink)}
+.panel h3 .cnt{margin-left:auto;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--card);color:var(--muted)}
+.panel .empty{margin:0;font-size:14px;color:var(--muted)}
+.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.items li{background:var(--card);border-radius:10px;padding:10px 12px;border-left:4px solid var(--idle);display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere;font-size:15px}
+.items li.now,.items li.snz{border-left-color:var(--wait)}
+.items li.ok{border-left-color:var(--go)} .items li.warn{border-left-color:var(--wait)} .items li.test{border-left-color:var(--idle)}
+.items .itop{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.items .meta{font-size:13px;color:var(--muted)}
+.items .rem{font-size:14.5px;background:var(--wait-bg);border-radius:8px;padding:6px 9px}
+.chip{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.chip.now,.chip.snz,.chip.warn{background:var(--wait-bg);color:var(--wait)}
+.chip.plan,.chip.test{background:var(--idle-bg);color:var(--idle)}
+.chip.ok{background:var(--go-bg);color:var(--go)}
+@media (max-width:460px){.items li{font-size:16px}}
 h3.sub3{margin:6px 0 0;font-size:16px}
 </style>
 </head>
@@ -177,7 +195,7 @@ h3.sub3{margin:6px 0 0;font-size:16px}
 <section aria-live="polite">
   <div class="jhead"><h2 id="jtitle">—</h2><span class="count" id="jcount"></span></div>
   <p class="live" id="jlive">Загружаю…</p>
-  <div id="jbody"></div>
+  <div id="jbody" style="display:flex;flex-direction:column;gap:14px"></div>
 </section>
 
 <footer>Только просмотр. Данных пациентов здесь нет. Отметивший указан по должности.</footer>
@@ -203,6 +221,15 @@ function csv(t){var r=[],row=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t
 var cache={};
 function get(g){if(cache[g])return cache[g];return cache[g]=fetch(BASE+g+'&t='+Date.now()).then(function(x){if(!x.ok)throw 0;return x.text();}).then(csv);}
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dmt(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.\d{4}(?:\s+(\d{1,2}:\d{2}))?/);return m?m[1]+'.'+m[2]+(m[3]?' в '+m[3]:''):esc(s);}
+function planItem(r){var st=(r[7]||'').trim(),c,ch;
+ if(st=='ОТПРАВЛЕНО'){c='now';ch='📨 ждёт нажатия';}else if(st=='ЖДЁТ ТЕКСТ'){c='now';ch='✍️ ждёт текст замечания';}
+ else if(st=='ОТЛОЖЕНО'){c='snz';ch='⏰ отложено до '+dmt(r[8]);}else{c='plan';ch='🗓 придёт '+dmt(r[6]);}
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span></div><b>Задача '+esc(r[1])+' · '+esc(r[4]||'')+'</b>'+(r[5]?'<span class="meta">срок '+esc(r[5])+'</span>':'')+'</li>';}
+function recItem(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]),c=w?'warn':(t?'test':'ok');
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+(w?'warn':'ok')+'">'+(w?'⚠️ Замечание':'✅ В порядке')+'</span>'+(t?'<span class="chip test">учебная</span>':'')+'</div><b>'+esc(t?'Тестовая запись':r[1])+'</b>'+(r[4]?'<span class="rem">'+esc(r[4])+'</span>':'')+'<span class="meta">'+esc(r[5])+' · '+dmt(r[6])+' · № '+esc(r[0])+'</span></li>';}
+function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+'<span class="cnt">'+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
+
 var tabs=document.getElementById('tabs'),body=document.getElementById('jbody'),live=document.getElementById('jlive');
 var cur=null,shown=PAGE;
 J.forEach(function(j){var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.id='t-'+j.id;
@@ -216,15 +243,9 @@ function render(){var j=cur;live.textContent='Загружаю…';
  Promise.all([get(j.gid),get(BTN)]).then(function(d){if(cur!==j)return;
   var rows=d[0].slice(4).filter(function(r){return r[0];}).reverse();
   var pend=d[1].slice(4).filter(function(r){return r[0]&&String(r[3]).indexOf(j.id)==0;});
-  var p=pend.filter(function(r){return /ОТПРАВЛЕНО|ЖДЁТ ТЕКСТ|ОТЛОЖЕНО/.test(r[7]);}).map(function(r){
-   var st=r[7]=='ОТЛОЖЕНО'?'⏰ отложено до '+esc(r[8]):(r[7]=='ЖДЁТ ТЕКСТ'?'ждёт текст замечания':'ждёт нажатия в Telegram');
-   return '<li><b>'+esc(r[1])+'</b> · '+esc(r[4]||'')+'<small>'+st+(r[5]?' · срок '+esc(r[5]):'')+'</small></li>';});
-  var n=pend.filter(function(r){return r[7]=='ЖДЁТ';}).map(function(r){return '<li class="plan"><b>'+esc(r[1])+'</b> · '+esc(r[4]||'')+'<small>придёт '+esc(r[6])+'</small></li>';});
-  var h='';
-  if(p.length||n.length)h+='<h3 class="sub3">Сейчас в Telegram</h3><ul class="pend">'+p.join('')+n.join('')+'</ul>';
-  h+='<h3 class="sub3">Записи</h3>';
-  h+=rows.length?'<ul class="jlist">'+rows.slice(0,shown).map(function(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]);
-    return '<li class="'+(t?'test ':'')+(w?'warn':'')+'"><b>№ '+esc(r[0])+' · '+esc(r[3])+'</b> <span class="per">'+esc(r[1])+'</span><small>'+esc(r[5])+' · '+esc(r[6])+'</small>'+(r[4]?'<span class="rem">'+esc(r[4])+'</span>':'')+'</li>';}).join('')+'</ul>':'<p class="soon">Записей пока нет.</p>';
+  var plan=pend.filter(function(r){return /ОТПРАВЛЕНО|ЖДЁТ ТЕКСТ|ОТЛОЖЕНО|^ЖДЁТ$/.test((r[7]||'').trim());});
+  plan.sort(function(x,y){return (x[7]=='ЖДЁТ')-(y[7]=='ЖДЁТ');});
+  var h=panel('plan','🕐','Запланировано',plan.map(planItem),'Сейчас ничего не запланировано')+panel('rec','📒','Записи',rows.slice(0,shown).map(recItem),'Записей пока нет',rows.length);
   if(rows.length>shown)h+='<button type="button" class="more" id="more">Показать ещё ('+(rows.length-shown)+')</button>';
   body.innerHTML=h;document.getElementById('jcount').textContent=rows.length?'записей: '+rows.length:'';
   var m=document.getElementById('more');if(m)m.onclick=function(){shown+=PAGE;render();};

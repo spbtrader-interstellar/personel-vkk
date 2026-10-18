@@ -132,6 +132,24 @@ footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padd
 .fontctl button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--plum);font:700 17px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer}
 .fontctl button:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 @media (max-width:460px){body{font-size:17px}.tt{font-size:16px}.lead{font-size:16px}.jlist li{font-size:16px}.pend li{font-size:15.5px}}
+.panel{border-radius:14px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
+.panel.plan{background:var(--wait-bg)}
+.panel.rec{background:var(--go-bg)}
+.panel h3{display:flex;align-items:center;gap:8px;margin:0;font-size:17px;color:var(--ink)}
+.panel h3 .cnt{margin-left:auto;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--card);color:var(--muted)}
+.panel .empty{margin:0;font-size:14px;color:var(--muted)}
+.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.items li{background:var(--card);border-radius:10px;padding:10px 12px;border-left:4px solid var(--idle);display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere;font-size:15px}
+.items li.now,.items li.snz{border-left-color:var(--wait)}
+.items li.ok{border-left-color:var(--go)} .items li.warn{border-left-color:var(--wait)} .items li.test{border-left-color:var(--idle)}
+.items .itop{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.items .meta{font-size:13px;color:var(--muted)}
+.items .rem{font-size:14.5px;background:var(--wait-bg);border-radius:8px;padding:6px 9px}
+.chip{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.chip.now,.chip.snz,.chip.warn{background:var(--wait-bg);color:var(--wait)}
+.chip.plan,.chip.test{background:var(--idle-bg);color:var(--idle)}
+.chip.ok{background:var(--go-bg);color:var(--go)}
+@media (max-width:460px){.items li{font-size:16px}}
 .board{display:flex;flex-direction:column;gap:8px}
 details.tmonth{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:2px 14px}
 details.tmonth summary{cursor:pointer;font-weight:700;padding:9px 0;color:var(--plum)}
@@ -317,10 +335,7 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
   <h2>🧰 Электронные журналы · пилот</h2>
   <p class="lead">Главный врач отмечает проверку кнопкой в Telegram-группе (✅ всё в порядке · ⚠️ замечание · ⏰ отложить на неделю) — запись сразу попадает в таблицу, сайт показывает её при открытии (задержка до 5 минут). На время пилота основной — бумажный журнал 62-2. Записи «ТЕСТ» — учебные.</p>
   <p class="live" id="jlive">Загружаю данные из таблицы…</p>
-  <h3 style="margin:4px 0 0;font-size:16px">Сейчас в Telegram</h3>
-  <ul class="pend" id="jpend"><li class="plan">—</li></ul>
-  <h3 style="margin:4px 0 0;font-size:16px">Последние записи</h3>
-  <ul class="jlist" id="jrows"><li>—</li></ul>
+  <div id="jpanels" style="display:flex;flex-direction:column;gap:14px"></div>
   <a class="btn" href="journal.html#62-2">Открыть журнал полностью →</a>
 </section>
 
@@ -452,6 +467,15 @@ function csv(t){var r=[],row=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t
  if(f!==''||row.length){row.push(f);r.push(row);}return r;}
 function get(g){return fetch(BASE+g+'&t='+Date.now()).then(function(x){if(!x.ok)throw 0;return x.text();}).then(csv);}
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function dmt(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.\d{4}(?:\s+(\d{1,2}:\d{2}))?/);return m?m[1]+'.'+m[2]+(m[3]?' в '+m[3]:''):esc(s);}
+function planItem(r){var st=(r[7]||'').trim(),c,ch;
+ if(st=='ОТПРАВЛЕНО'){c='now';ch='📨 ждёт нажатия';}else if(st=='ЖДЁТ ТЕКСТ'){c='now';ch='✍️ ждёт текст замечания';}
+ else if(st=='ОТЛОЖЕНО'){c='snz';ch='⏰ отложено до '+dmt(r[8]);}else{c='plan';ch='🗓 придёт '+dmt(r[6]);}
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span></div><b>Задача '+esc(r[1])+' · '+esc(r[4]||'')+'</b>'+(r[5]?'<span class="meta">срок '+esc(r[5])+'</span>':'')+'</li>';}
+function recItem(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]),c=w?'warn':(t?'test':'ok');
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+(w?'warn':'ok')+'">'+(w?'⚠️ Замечание':'✅ В порядке')+'</span>'+(t?'<span class="chip test">учебная</span>':'')+'</div><b>'+esc(t?'Тестовая запись':r[1])+'</b>'+(r[4]?'<span class="rem">'+esc(r[4])+'</span>':'')+'<span class="meta">'+esc(r[5])+' · '+dmt(r[6])+' · № '+esc(r[0])+'</span></li>';}
+function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+'<span class="cnt">'+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
+
 function dm(s){var m=String(s||'').match(/(\d{2})\.(\d{2})/);return m?m[1]+'.'+m[2]:'';}
 function setTask(n,cls,text){var li=document.querySelector('.task[data-n="'+n+'"]');if(!li)return;
  li.classList.remove('late','soon','done','note');if(cls)li.classList.add(cls);li.querySelector('.ts').textContent=text;
@@ -460,20 +484,19 @@ var live=document.getElementById('jlive');
 Promise.all([get(G.tasks),get(G.btn),get(G.j622)]).then(function(d){
  var tasks=d[0],btn=d[1],jr=d[2];
  /* кнопки: отправлено / отложено */
- var pend=[],plan=[];
+ var plan=[];
  btn.slice(4).forEach(function(r){if(!r[0])return;var st=(r[7]||'').trim();
-  if(st=='ОТПРАВЛЕНО'||st=='ЖДЁТ ТЕКСТ'){pend.push('<li><b>'+esc(r[1])+'</b> · '+esc(r[2])+'<small>'+(st=='ЖДЁТ ТЕКСТ'?'ждёт текст замечания':'отправлено, ждёт нажатия')+(r[5]?' · срок '+esc(r[5]):'')+'</small></li>');setTask(r[1],'soon','в Telegram');}
-  else if(st=='ОТЛОЖЕНО'){pend.push('<li><b>'+esc(r[1])+'</b> · '+esc(r[2])+'<small>⏰ отложено до '+esc(r[8])+(r[14]?' · '+esc(r[14]):'')+'</small></li>');setTask(r[1],'soon','⏰ до '+dm(r[8]));}
-  else if(st=='ЖДЁТ'){plan.push('<li class="plan"><b>'+esc(r[1])+'</b> · '+esc(r[2])+'<small>придёт '+esc(r[6])+'</small></li>');}});
- document.getElementById('jpend').innerHTML=(pend.join('')+plan.join(''))||'<li class="plan">Сейчас ничего не ждёт отметки</li>';
+  if(/ОТПРАВЛЕНО|ЖДЁТ ТЕКСТ|ОТЛОЖЕНО|^ЖДЁТ$/.test(st))plan.push(r);
+  if(st=='ОТПРАВЛЕНО'||st=='ЖДЁТ ТЕКСТ')setTask(r[1],'soon','в Telegram');
+  else if(st=='ОТЛОЖЕНО')setTask(r[1],'soon','⏰ до '+dm(r[8]));});
+ plan.sort(function(x,y){return (x[7]=='ЖДЁТ')-(y[7]=='ЖДЁТ');});
  /* главный список: ☑ / ⚠ */
  tasks.slice(4).forEach(function(r){var n=(r[0]||'').trim(),st=(r[4]||'').trim();if(!/^\d+$/.test(n))return;
   if(st.indexOf('☑')==0||st=='сделано')setTask(n,'done','сделано '+dm(r[5]));
   else if(st.indexOf('⚠')==0||st=='замечание')setTask(n,'note','замечание');});
  /* журнал 62-2 */
  var rows=jr.slice(4).filter(function(r){return r[0];});
- document.getElementById('jrows').innerHTML=rows.length?rows.slice().reverse().slice(0,3).map(function(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]);
-  return '<li class="'+(t?'test ':'')+(w?'warn':'')+'"><b>№ '+esc(r[0])+' · '+esc(r[3])+'</b> <span class="per">'+esc(r[1])+'</span><small>'+esc(r[5])+' · '+esc(r[6])+'</small>'+(r[4]?'<span class="rem">'+esc(r[4])+'</span>':'')+'</li>';}).join(''):'<li>Записей пока нет</li>';
+ document.getElementById('jpanels').innerHTML=panel('plan','🕐','Запланировано',plan.map(planItem),'Сейчас ничего не запланировано')+panel('rec','📒','Последние записи',rows.slice().reverse().slice(0,3).map(recItem),'Записей пока нет',rows.length);
  /* плитка 62-2 — по последней не учебной записи */
  var real=rows.filter(function(r){return !/ТЕСТ/i.test(r[1]);}).pop();
  if(real){var tile=[].slice.call(document.querySelectorAll('.tile')).filter(function(x){return /62-2/.test(x.querySelector('.code').textContent);})[0];
