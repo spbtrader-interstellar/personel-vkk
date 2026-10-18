@@ -157,6 +157,27 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
 @media (max-width:460px){.tabs button{font-size:14px;padding:7px 11px}}
 .panel.soonp{background:var(--soft)}
 .tabs button:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.bookbar{display:flex}
+.bookbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:10px 14px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.bookbtn .bk{font-size:26px;line-height:1}
+.bookbtn small{display:block;font-size:12px;color:var(--muted)}
+.bookbtn b{font-size:16px;color:var(--plum)}
+.bookbtn .caret{margin-left:auto;color:var(--muted);font-size:18px}
+.bookbtn:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.bookmenu{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:8px}
+.bookmenu[hidden]{display:none}
+.bmhead{display:flex;align-items:center;justify-content:space-between;padding:2px 4px}
+.bmclose{font:700 16px var(--body);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 8px}
+.bmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px}
+.bmgrid button{display:flex;align-items:center;gap:10px;text-align:left;font:inherit;font-size:15px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;min-width:0}
+.bmgrid button .ic{font-size:20px}
+.bmgrid button .nm{flex:1;min-width:0}
+.bmgrid button .nm small{display:block;font-size:12px;color:var(--muted)}
+.bmgrid button .st{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.bmgrid button .st.on{background:var(--go-bg);color:var(--go)} .bmgrid button .st.off{background:var(--idle-bg);color:var(--idle)}
+.bmgrid button[aria-selected="true"]{border-color:var(--plum);box-shadow:inset 0 0 0 1px var(--plum)}
+.bmgrid button:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.chip.stop{background:var(--stop-bg);color:var(--stop)} .items li.stop{border-left-color:var(--stop)}
 .back{font-size:14px;color:var(--plum);text-decoration:none;font-weight:600;align-self:flex-start}
 .back:hover{color:var(--pink)}
 .jhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;justify-content:space-between}
@@ -192,7 +213,8 @@ h3.sub3{margin:6px 0 0;font-size:16px}
   <h1>Электронные журналы</h1>
   <a class="back" href="./#journal">← На главную страницу</a>
   <p class="sub">Записи появляются, когда главный врач нажимает кнопку в Telegram-группе. Свежая запись — сверху. Обновление — до 5 минут. На время пилота основной — бумажный журнал.</p>
-  <nav class="tabs" role="tablist" aria-label="Журналы" id="tabs"></nav>
+  <div class="bookbar"><button type="button" class="bookbtn" id="bookbtn" aria-expanded="false" aria-controls="bookmenu"><span class="bk">📖</span><span><small>Журнал</small><b id="curname">—</b></span><span class="caret">▾</span></button></div>
+  <div class="bookmenu" id="bookmenu" hidden><div class="bmhead"><b>📖 Все журналы</b><button type="button" class="bmclose" id="bmclose" aria-label="Закрыть">✕</button></div><div class="bmgrid" id="tabs" role="menu"></div></div>
 </header>
 
 <section aria-live="polite">
@@ -220,11 +242,11 @@ var J=[
  {id:'63-1',tab:'✅ Плановые проверки',title:'Отчёты плановых проверок (63-1)',gid:null,freq:'раз в квартал до 18-го числа последнего месяца',who:'✱ главный врач',desc:'Итог плановой проверки: кабинеты, стенд и сайт, медицинские карты — без номеров карт и данных пациентов.'},
  {id:'63-2',tab:'📢 Стенд и сайт',title:'Проверка стенда и сайта (63-2)',gid:null,freq:'раз в квартал',who:'✱ главный врач',desc:'Информация для пациентов на стенде и сайте клиники актуальна.'},
  {id:'65-3',tab:'⚙️ Оборудование',title:'Оборудование: удостоверения, договоры, ТО (65-3)',gid:null,freq:'по сроку ТО и при покупке аппарата',who:'▶ управляющий',desc:'Отметки о техобслуживании и поверке аппаратов, без данных сотрудников.'},
- {id:'66-4',tab:'📌 Прочие события',title:'Прочие события (66-4)',gid:null,freq:'по событию, в тот же день',who:'▶ управляющий',desc:'Сломалось, не работает, не сделано — что случилось и что сделали. Без данных пациентов.'},
+ {id:'66-4',tab:'📌 Прочие события',title:'Прочие события (66-4)',gid:3111,live:true,ev:true,freq:'по событию, в тот же день',who:'▶ управляющий',desc:'Сломалось, не работает, не сделано — что случилось и что сделали. Без данных пациентов.'},
  {id:'49-07Б',tab:'✏️ Тренировка «Анафилаксия»',title:'Тренировка и тест «Анафилаксия» (49-07Б)',gid:null,freq:'раз в год и каждому новому медработнику',who:'✱ главный врач',desc:'Дата тренировки и итог: сколько человек прошли тест. Фамилии и баллы — только на бумаге.'},
  {id:'64-1',tab:'📊 Итоги',title:'Итоги внутреннего контроля (64-1)',gid:null,freq:'раз в полгода и в конце года',who:'▶ ✱ оба',desc:'Отметка, что итоги за период подписаны; цифры — только сводные.'}
 ];
-J.forEach(function(j){j.on=!!j.gid;});
+J.forEach(function(j){j.on=j.id=='62-2'||!!j.live;});
 function fetchT(u){var c=window.AbortController?new AbortController():null;var t=setTimeout(function(){if(c)c.abort();},12000);return fetch(u,c?{signal:c.signal}:{}).finally(function(){clearTimeout(t);});}
 function csv(t){var r=[],row=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t[i];
  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
@@ -244,16 +266,32 @@ function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'
 
 var tabs=document.getElementById('tabs'),body=document.getElementById('jbody'),live=document.getElementById('jlive');
 var cur=null,shown=PAGE;
-J.forEach(function(j){var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.id='t-'+j.id;
- b.textContent=j.tab+(j.on?'':' · скоро');if(!j.on)b.className='soonb';b.onclick=function(){show(j.id,true);};tabs.appendChild(b);});
+J.forEach(function(j){var b=document.createElement('button');b.type='button';b.setAttribute('role','menuitem');b.id='t-'+j.id;
+ var ic=j.tab.split(' ')[0],nm=j.tab.slice(ic.length+1);
+ b.innerHTML='<span class="ic">'+ic+'</span><span class="nm">'+esc(nm)+'<small>'+esc(j.id)+'</small></span><span class="st '+(j.on?'on">работает':'off">скоро')+'</span>';
+ b.onclick=function(){show(j.id,true);menu(false);};tabs.appendChild(b);});
+var bm=document.getElementById('bookmenu'),bb=document.getElementById('bookbtn');
+function menu(open){bm.hidden=!open;bb.setAttribute('aria-expanded',open?'true':'false');if(open){var s=tabs.querySelector('[aria-selected="true"]');(s||tabs.firstChild).focus();}}
+bb.onclick=function(){menu(bm.hidden);};document.getElementById('bmclose').onclick=function(){menu(false);bb.focus();};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!bm.hidden){menu(false);bb.focus();}});
+window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(h&&(!cur||h!==cur.id))show(decodeURIComponent(h),false);});
 function show(id,push){var j=J.filter(function(x){return x.id==id;})[0]||J[0];cur=j;shown=PAGE;
  [].forEach.call(tabs.children,function(b){b.setAttribute('aria-selected',b.id=='t-'+j.id?'true':'false');});
- document.getElementById('t-'+j.id).scrollIntoView({block:'nearest',inline:'nearest'});
+ document.getElementById('curname').textContent=j.tab;
  if(push)history.replaceState(null,'','#'+j.id);try{localStorage.setItem('vkk-j',j.id);}catch(e){}
  document.getElementById('jtitle').textContent=j.title;render();}
 function render(){var j=cur;if(!j.on){live.textContent='';document.getElementById('jcount').textContent='';body.innerHTML='<div class="panel soonp"><h3>🔜 Скоро</h3><p class="empty"><b>'+esc(j.desc||'')+'</b></p><p class="empty">Как часто: '+esc(j.freq||'')+' · кто отмечает: '+esc(j.who||'')+'</p><p class="empty">Пока журнал ведётся на бумаге в папке у главного врача — как обычно. Вкладка включится, когда подключим кнопки в Telegram.</p></div>';return;}live.textContent='Загружаю…';
  Promise.all([get(j.gid),get(BTN)]).then(function(d){if(cur!==j)return;
   var rows=d[0].slice(4).filter(function(r){return r[0];}).reverse();
+  if(j.ev){var evs=rows.filter(function(r){return r[2]||r[5]!='ЖДЁТ ТЕКСТ';});
+   var openE=evs.filter(function(r){return r[5]=='ОТКРЫТО'||r[5]=='В РАБОТЕ';});
+   function evItem(r){var st=r[5],c=st=='ОТКРЫТО'?'stop':(st=='В РАБОТЕ'?'snz':(st=='УСТРАНЕНО'?'ok':'test'));
+    var ch=st=='ОТКРЫТО'?'🔴 открыто':(st=='В РАБОТЕ'?'⏳ в работе':(st=='УСТРАНЕНО'?'✅ устранено':'✍️ черновик'));
+    return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span><span class="chip plan">'+esc(r[1])+'</span></div><b>№ '+esc(r[0])+' · '+esc(r[2]||'—')+'</b>'+(r[7]?'<span class="rem">Сделали: '+esc(r[7])+'</span>':'')+'<span class="meta">сообщил: '+esc(r[3])+' · '+dmt(r[4])+(r[6]?' · в работе: '+esc(r[6]):'')+(r[8]?' · устранено: '+esc(r[8]):'')+'</span></li>';}
+   body.innerHTML=panel('plan','🔴','Не устранено',openE.map(evItem),'Всё устранено')+panel('rec','📒','Все события',evs.slice(0,shown).map(evItem),'Событий пока нет',evs.length)+(evs.length>shown?'<button type="button" class="more" id="more">Показать ещё ('+(evs.length-shown)+')</button>':'');
+   document.getElementById('jcount').textContent=evs.length?'событий: '+evs.length:'';
+   var m2=document.getElementById('more');if(m2)m2.onclick=function(){shown+=PAGE;render();};
+   live.innerHTML='Данные из таблицы: <b>'+new Date().toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</b> · сообщить — кнопкой «📌 Сообщить о событии» в Telegram-группе или в MAX управляющему';return;}
   var pend=d[1].slice(4).filter(function(r){return r[0]&&String(r[3]).indexOf(j.id)==0;});
   var plan=pend.filter(function(r){return /ОТПРАВЛЕНО|ЖДЁТ ТЕКСТ|ОТЛОЖЕНО|^ЖДЁТ$/.test((r[7]||'').trim());});
   plan.sort(function(x,y){return (x[7]=='ЖДЁТ')-(y[7]=='ЖДЁТ');});
