@@ -214,12 +214,13 @@ var J=[
  {id:'62-3',tab:'🧹 Уборки',title:'Журнал проверки генеральных уборок (62-3)',gid:null},
  {id:'67',tab:'⏳ Время главного врача',title:'Время главного врача: план и факт (67)',gid:null}
 ];
+function fetchT(u){var c=window.AbortController?new AbortController():null;var t=setTimeout(function(){if(c)c.abort();},12000);return fetch(u,c?{signal:c.signal}:{}).finally(function(){clearTimeout(t);});}
 function csv(t){var r=[],row=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t[i];
  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
  else if(c=='"')q=true;else if(c==','){row.push(f);f='';}else if(c=='\n'){row.push(f);r.push(row);row=[];f='';}else if(c!='\r')f+=c;}
  if(f!==''||row.length){row.push(f);r.push(row);}return r;}
 var cache={};
-function get(g){if(cache[g])return cache[g];return cache[g]=fetch(BASE+g+'&t='+Date.now()).then(function(x){if(!x.ok)throw 0;return x.text();}).then(csv);}
+function get(g){if(cache[g])return cache[g];return cache[g]=fetchT(BASE+g+'&t='+Date.now()).then(function(x){if(!x.ok)throw 0;return x.text();}).then(csv);}
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function dmt(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.\d{4}(?:\s+(\d{1,2}:\d{2}))?/);return m?m[1]+'.'+m[2]+(m[3]?' в '+m[3]:''):esc(s);}
 function planItem(r){var st=(r[7]||'').trim(),c,ch;
