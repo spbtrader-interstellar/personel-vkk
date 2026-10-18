@@ -467,7 +467,12 @@ function csv(t){var r=[],row=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t
  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
  else if(c=='"')q=true;else if(c==','){row.push(f);f='';}else if(c=='\n'){row.push(f);r.push(row);row=[];f='';}else if(c!='\r')f+=c;}
  if(f!==''||row.length){row.push(f);r.push(row);}return r;}
-function get(g){return fetchT(BASE+g+'&t='+Date.now()).then(function(x){if(!x.ok)throw 0;return x.text();}).then(csv);}
+var HBASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vTznMTE4JARrDUguO9Qu5o8gz_Bc6AGjBYJrZzPOHzVYXt6oFID5xb3Qqw2uws7NjCmZOzY1OnJIO8U/pubhtml?single=true&widget=false&headers=false&chrome=false&gid=';
+/* Основной путь — HTML-вид опубликованной вкладки (docs.google.com, без переадресации). CSV уходит на docs.googleusercontent.com, который у части провайдеров в РФ не открывается — он только запасной. */
+function htab(t){var d=new DOMParser().parseFromString(t,'text/html'),r=[];[].forEach.call(d.querySelectorAll('table tbody tr'),function(tr){var th=tr.querySelector('th'),n=th?parseInt(th.textContent,10):NaN;if(!n)return;var row=[];[].forEach.call(tr.querySelectorAll('td'),function(td){row.push(td.textContent.trim());for(var k=1;k<td.colSpan;k++)row.push('');});r[n-1]=row;});for(var i=0;i<r.length;i++)if(!r[i])r[i]=[];if(!r.length)throw 0;return r;}
+function okT(x){if(!x.ok)throw 0;return x.text();}
+function load(g){return fetchT(HBASE+g+'&t='+Date.now()).then(okT).then(htab).catch(function(){return fetchT(BASE+g+'&t='+Date.now()).then(okT).then(csv);});}
+function get(g){return load(g);}
 function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function dmt(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.\d{4}(?:\s+(\d{1,2}:\d{2}))?/);return m?m[1]+'.'+m[2]+(m[3]?' в '+m[3]:''):esc(s);}
 function planItem(r){var st=(r[7]||'').trim(),c,ch;
