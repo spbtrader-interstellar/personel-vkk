@@ -33,7 +33,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16p
 .feed{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 72px;display:flex;flex-direction:column;gap:44px}
 a{color:inherit}
 .top{display:flex;flex-direction:column;gap:10px}
-.brand{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-weight:700}
+.brand{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-weight:700;text-decoration:none;align-self:flex-start}
+a.brand:hover{text-decoration:underline}
 h1{font-family:var(--display);font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0;color:var(--plum);text-wrap:balance}
 .sub{color:var(--muted);margin:0;max-width:62ch}
 .demo{align-self:flex-start;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--wait-bg);color:var(--wait);font-weight:600}
@@ -209,9 +210,9 @@ h3.sub3{margin:6px 0 0;font-size:16px}
 <body>
 <div class="feed" style="gap:22px">
 <header class="top">
-  <div class="brand">Персонель · внутренний контроль</div>
+  <a class="brand" href="./" title="На главную">Персонель · косметология · Екатеринбург</a>
   <h1>Электронные журналы</h1>
-  <a class="back" href="./#journal">← На главную страницу</a>
+  <a class="back" href="./">← На главную страницу</a>
   <p class="sub">Записи появляются, когда главный врач нажимает кнопку в Telegram-группе. Свежая запись — сверху. Обновление — до 5 минут. На время пилота основной — бумажный журнал.</p>
   <div class="bookbar"><button type="button" class="bookbtn" id="bookbtn" aria-expanded="false" aria-controls="bookmenu"><span class="bk">📖</span><span><small>Журнал</small><b id="curname">—</b></span><span class="caret">▾</span></button></div>
   <div class="bookmenu" id="bookmenu" hidden><div class="bmhead"><b>📖 Все журналы</b><button type="button" class="bmclose" id="bmclose" aria-label="Закрыть">✕</button></div><div class="bmgrid" id="tabs" role="menu"></div></div>
@@ -259,10 +260,10 @@ function dmt(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.\d{4}(?:\s+(\d{1,2}
 function planItem(r){var st=(r[7]||'').trim(),c,ch;
  if(st=='ОТПРАВЛЕНО'){c='now';ch='📨 ждёт нажатия';}else if(st=='ЖДЁТ ТЕКСТ'){c='now';ch='✍️ ждёт текст замечания';}
  else if(st=='ОТЛОЖЕНО'){c='snz';ch='⏰ отложено до '+dmt(r[8]);}else{c='plan';ch='🗓 придёт '+dmt(r[6]);}
- return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span></div><b>Задача '+esc(r[1])+' · '+esc(r[4]||'')+'</b>'+(r[5]?'<span class="meta">срок '+esc(r[5])+'</span>':'')+'</li>';}
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span></div> <b>Задача '+esc(r[1])+' · '+esc(r[4]||'')+'</b> '+(r[5]?'<span class="meta">срок '+esc(r[5])+'</span>':'')+'</li>';}
 function recItem(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]),c=w?'warn':(t?'test':'ok');
- return '<li class="'+c+'"><div class="itop"><span class="chip '+(w?'warn':'ok')+'">'+(w?'⚠️ Замечание':'✅ В порядке')+'</span>'+(t?'<span class="chip test">учебная</span>':'')+'</div><b>'+esc(t?'Тестовая запись':r[1])+'</b>'+(r[4]?'<span class="rem">'+esc(r[4])+'</span>':'')+'<span class="meta">'+esc(r[5])+' · '+dmt(r[6])+' · № '+esc(r[0])+'</span></li>';}
-function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+'<span class="cnt">'+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+(w?'warn':'ok')+'">'+(w?'⚠️ Замечание':'✅ В порядке')+'</span>'+(t?' <span class="chip test">🧪 учебная (тест)</span>':'')+'</div> <b>'+esc(t?'Тестовая запись':r[1])+'</b> '+(r[4]?'<span class="rem">'+esc(r[4])+'</span> ':'')+'<span class="meta">'+esc(r[5])+' · '+dmt(r[6])+' · № '+esc(r[0])+'</span></li>';}
+function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+' <span class="cnt" title="Сколько всего">всего '+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
 
 var tabs=document.getElementById('tabs'),body=document.getElementById('jbody'),live=document.getElementById('jlive');
 var cur=null,shown=PAGE;
@@ -287,7 +288,7 @@ function render(){var j=cur;if(!j.on){live.textContent='';document.getElementByI
    var openE=evs.filter(function(r){return r[5]=='ОТКРЫТО'||r[5]=='В РАБОТЕ';});
    function evItem(r){var st=r[5],c=st=='ОТКРЫТО'?'stop':(st=='В РАБОТЕ'?'snz':(st=='УСТРАНЕНО'?'ok':'test'));
     var ch=st=='ОТКРЫТО'?'🔴 открыто':(st=='В РАБОТЕ'?'⏳ в работе':(st=='УСТРАНЕНО'?'✅ устранено':'✍️ черновик'));
-    return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span><span class="chip plan">'+esc(r[1])+'</span></div><b>№ '+esc(r[0])+' · '+esc(r[2]||'—')+'</b>'+(r[7]?'<span class="rem">Сделали: '+esc(r[7])+'</span>':'')+'<span class="meta">сообщил: '+esc(r[3])+' · '+dmt(r[4])+(r[6]?' · в работе: '+esc(r[6]):'')+(r[8]?' · устранено: '+esc(r[8]):'')+'</span></li>';}
+    return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span> <span class="chip plan">'+esc(r[1])+'</span></div> <b>№ '+esc(r[0])+' · '+esc(r[2]||'—')+'</b> '+(r[7]?'<span class="rem">Сделали: '+esc(r[7])+'</span> ':'')+'<span class="meta">сообщил: '+esc(r[3])+' · '+dmt(r[4])+(r[6]?' · в работе: '+esc(r[6]):'')+(r[8]?' · устранено: '+esc(r[8]):'')+'</span></li>';}
    body.innerHTML=panel('plan','🔴','Не устранено',openE.map(evItem),'Всё устранено')+panel('rec','📒','Все события',evs.slice(0,shown).map(evItem),'Событий пока нет',evs.length)+(evs.length>shown?'<button type="button" class="more" id="more">Показать ещё ('+(evs.length-shown)+')</button>':'');
    document.getElementById('jcount').textContent=evs.length?'событий: '+evs.length:'';
    var m2=document.getElementById('more');if(m2)m2.onclick=function(){shown+=PAGE;render();};

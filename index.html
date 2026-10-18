@@ -33,7 +33,8 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16p
 .feed{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 72px;display:flex;flex-direction:column;gap:44px}
 a{color:inherit}
 .top{display:flex;flex-direction:column;gap:10px}
-.brand{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-weight:700}
+.brand{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-weight:700;text-decoration:none;align-self:flex-start}
+a.brand:hover{text-decoration:underline}
 h1{font-family:var(--display);font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0;color:var(--plum);text-wrap:balance}
 .sub{color:var(--muted);margin:0;max-width:62ch}
 .demo{align-self:flex-start;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--wait-bg);color:var(--wait);font-weight:600}
@@ -174,7 +175,7 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
 <div class="feed">
 
 <header class="top">
-  <div class="brand">Персонель · косметология · Екатеринбург</div>
+  <a class="brand" href="./" title="На главную">Персонель · косметология · Екатеринбург</a>
   <h1>Внутренний контроль</h1>
   <p class="sub">Доска главного врача и справочник для сотрудников. Здесь ничего не заполняют: записи ведутся на бумаге в папках у главного врача, сайт показывает порядок дел и ссылки.</p>
   <span class="upd">Обновлено 18.10.2026 · система начинает работу 02.11.2026</span>
@@ -472,10 +473,10 @@ function dmt(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.\d{4}(?:\s+(\d{1,2}
 function planItem(r){var st=(r[7]||'').trim(),c,ch;
  if(st=='ОТПРАВЛЕНО'){c='now';ch='📨 ждёт нажатия';}else if(st=='ЖДЁТ ТЕКСТ'){c='now';ch='✍️ ждёт текст замечания';}
  else if(st=='ОТЛОЖЕНО'){c='snz';ch='⏰ отложено до '+dmt(r[8]);}else{c='plan';ch='🗓 придёт '+dmt(r[6]);}
- return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span></div><b>Задача '+esc(r[1])+' · '+esc(r[4]||'')+'</b>'+(r[5]?'<span class="meta">срок '+esc(r[5])+'</span>':'')+'</li>';}
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span></div> <b>Задача '+esc(r[1])+' · '+esc(r[4]||'')+'</b> '+(r[5]?'<span class="meta">срок '+esc(r[5])+'</span>':'')+'</li>';}
 function recItem(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]),c=w?'warn':(t?'test':'ok');
- return '<li class="'+c+'"><div class="itop"><span class="chip '+(w?'warn':'ok')+'">'+(w?'⚠️ Замечание':'✅ В порядке')+'</span>'+(t?'<span class="chip test">учебная</span>':'')+'</div><b>'+esc(t?'Тестовая запись':r[1])+'</b>'+(r[4]?'<span class="rem">'+esc(r[4])+'</span>':'')+'<span class="meta">'+esc(r[5])+' · '+dmt(r[6])+' · № '+esc(r[0])+'</span></li>';}
-function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+'<span class="cnt">'+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+(w?'warn':'ok')+'">'+(w?'⚠️ Замечание':'✅ В порядке')+'</span>'+(t?' <span class="chip test">🧪 учебная (тест)</span>':'')+'</div> <b>'+esc(t?'Тестовая запись':r[1])+'</b> '+(r[4]?'<span class="rem">'+esc(r[4])+'</span> ':'')+'<span class="meta">'+esc(r[5])+' · '+dmt(r[6])+' · № '+esc(r[0])+'</span></li>';}
+function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+' <span class="cnt" title="Сколько всего">всего '+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
 
 function dm(s){var m=String(s||'').match(/(\d{2})\.(\d{2})/);return m?m[1]+'.'+m[2]:'';}
 function setTask(n,cls,text){var li=document.querySelector('.task[data-n="'+n+'"]');if(!li)return;
