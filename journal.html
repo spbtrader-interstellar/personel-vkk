@@ -205,6 +205,8 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
 .chip.ok{background:var(--go-bg);color:var(--go)}
 @media (max-width:460px){.items li{font-size:16px}}
 h3.sub3{margin:6px 0 0;font-size:16px}
+.panel .more{display:block;margin:10px auto 0}
+#planmore .items{margin-top:8px}
 .calnote{margin:8px 2px 0;font-size:13.5px;color:var(--muted)}
 .calnote a{color:var(--plum)}
 </style>
@@ -280,6 +282,21 @@ function taskItem(x){var r=x.r,dd=esc(String(r[1]).slice(0,5)),c,ch;
  return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span> <span class="chip plan">'+esc(r[3]||'')+'</span></div> <b>Задача '+esc(r[0])+' · '+esc(r[2])+'</b></li>';}
 /* просроченные — все, предстоящие — ближайшие NEXT */
 function taskList(xs){var past=xs.filter(function(x){return x.days<0;}),fut=xs.filter(function(x){return x.days>=0;});return past.concat(fut.slice(0,NEXT));}
+/* «Запланировано»: срочное (ждёт нажатия, отложено, срок прошёл) + одно ближайшее; остальное — по кнопке */
+var planOpen=false;
+function planPanel(items,empty){/* items: [{html,urgent,d}] */
+ items.sort(function(a,b){return (b.urgent-a.urgent)||((a.d||0)-(b.d||0));});
+ var urg=items.filter(function(x){return x.urgent;}),rest=items.filter(function(x){return !x.urgent;});
+ var first=urg.concat(rest.slice(0,1)),more=rest.slice(1);
+ var h='<div class="panel plan"><h3>🕐 Запланировано <span class="cnt" title="Сколько всего">всего '+items.length+'</span></h3>';
+ if(!items.length)return h+'<p class="empty">'+empty+'</p>'+calnote(0)+'</div>';
+ h+='<ul class="items">'+first.map(function(x){return x.html;}).join('')+'</ul>';
+ if(more.length){h+='<div id="planmore"'+(planOpen?'':' hidden')+'><ul class="items">'+more.map(function(x){return x.html;}).join('')+'</ul></div>'+
+  '<button type="button" class="more" id="planbtn" aria-expanded="'+(planOpen?'true':'false')+'" aria-controls="planmore">'+(planOpen?'Скрыть':'Показать все запланированные ('+more.length+')')+'</button>';}
+ return h+calnote(0)+'</div>';}
+function bindPlan(){var b=document.getElementById('planbtn');if(!b)return;b.onclick=function(){planOpen=!planOpen;var m=document.getElementById('planmore');m.hidden=!planOpen;b.setAttribute('aria-expanded',planOpen?'true':'false');b.textContent=planOpen?'Скрыть':'Показать все запланированные ('+m.querySelectorAll('li').length+')';};}
+function tItem(x){return {html:taskItem(x),urgent:x.days<0?1:0,d:x.d};}
+function bItem(r){var st=(r[7]||'').trim(),u=/ОТПРАВЛЕНО|ЖДЁТ ТЕКСТ|ОТЛОЖЕНО/.test(st);return {html:planItem(r),urgent:u?1:0,d:pd(st=='ОТЛОЖЕНО'?r[8]:r[6])};}
 function calnote(rest){return '<p class="calnote">'+(rest>0?'Дальше ещё '+rest+' '+(rest%10==1&&rest%100!=11?'срок':(rest%10>=2&&rest%10<=4&&(rest%100<10||rest%100>=20)?'срока':'сроков'))+' — все':'Все сроки')+' в <a href="./#cal">Google Календаре «ВКК Персонель»</a> (номер задачи — в названии события).</p>';}
 function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+' <span class="cnt" title="Сколько всего">всего '+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
 
@@ -294,7 +311,7 @@ function menu(open){bm.hidden=!open;bb.setAttribute('aria-expanded',open?'true':
 bb.onclick=function(){menu(bm.hidden);};document.getElementById('bmclose').onclick=function(){menu(false);bb.focus();};
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!bm.hidden){menu(false);bb.focus();}});
 window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(h&&(!cur||h!==cur.id))show(decodeURIComponent(h),false);});
-function show(id,push){var j=J.filter(function(x){return x.id==id;})[0]||J[0];cur=j;shown=PAGE;
+function show(id,push){var j=J.filter(function(x){return x.id==id;})[0]||J[0];cur=j;shown=PAGE;planOpen=false;
  [].forEach.call(tabs.children,function(b){b.setAttribute('aria-selected',b.id=='t-'+j.id?'true':'false');});
  document.getElementById('curname').textContent=j.tab;
  if(push)history.replaceState(null,'','#'+j.id);try{localStorage.setItem('vkk-j',j.id);}catch(e){}
@@ -302,8 +319,8 @@ function show(id,push){var j=J.filter(function(x){return x.id==id;})[0]||J[0];cu
 function render(){var j=cur;if(!j.on){live.textContent='';document.getElementById('jcount').textContent='';
  var soon='<div class="panel soonp"><h3>🔜 Скоро</h3><p class="empty"><b>'+esc(j.desc||'')+'</b></p><p class="empty">Как часто: '+esc(j.freq||'')+' · кто отмечает: '+esc(j.who||'')+'</p><p class="empty">Пока журнал ведётся на бумаге в папке у главного врача — как обычно. Вкладка включится, когда подключим кнопки в Telegram.</p></div>';
  body.innerHTML='<div class="panel plan"><h3>🕐 Запланировано</h3><p class="empty">Загружаю сроки…</p></div>'+soon;
- get(TASKS).then(function(t){if(cur!==j)return;var xs=dueTasks(t,j.id,[]),li=taskList(xs).map(taskItem);
-  body.innerHTML=panel('plan','🕐','Запланировано',li,'В плане задач сроков для этого журнала пока нет').replace(/<\/div>$/,calnote(xs.length-li.length)+'</div>')+soon;
+ get(TASKS).then(function(t){if(cur!==j)return;var xs=dueTasks(t,j.id,[]);
+  body.innerHTML=planPanel(xs.map(tItem),'В плане задач сроков для этого журнала пока нет')+soon;bindPlan();
   live.innerHTML='Сроки из плана задач: <b>'+new Date().toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</b>';
  }).catch(function(){if(cur!==j)return;body.innerHTML=soon;live.textContent='Сроки сейчас недоступны — обновите страницу позже.';});return;}live.textContent='Загружаю…';
  Promise.all([get(j.gid),get(BTN),get(TASKS).catch(function(){return [];})]).then(function(d){if(cur!==j)return;
@@ -320,10 +337,10 @@ function render(){var j=cur;if(!j.on){live.textContent='';document.getElementByI
   var pend=d[1].slice(4).filter(function(r){return r[0]&&String(r[3]).indexOf(j.id)==0;});
   var plan=pend.filter(function(r){return /ОТПРАВЛЕНО|ЖДЁТ ТЕКСТ|ОТЛОЖЕНО|^ЖДЁТ$/.test((r[7]||'').trim());});
   plan.sort(function(x,y){return (x[7]=='ЖДЁТ')-(y[7]=='ЖДЁТ');});
-  var xs=dueTasks(d[2],j.id,pend.map(function(r){return String(r[1]);})),tl=taskList(xs);
-  var h=panel('plan','🕐','Запланировано',plan.map(planItem).concat(tl.map(taskItem)),'Сейчас ничего не запланировано').replace(/<\/div>$/,calnote(xs.length-tl.length)+'</div>')+panel('rec','📒','Записи',rows.slice(0,shown).map(recItem),'Записей пока нет',rows.length);
+  var xs=dueTasks(d[2],j.id,pend.map(function(r){return String(r[1]);}));
+  var h=planPanel(plan.map(bItem).concat(xs.map(tItem)),'Сейчас ничего не запланировано')+panel('rec','📒','Записи',rows.slice(0,shown).map(recItem),'Записей пока нет',rows.length);
   if(rows.length>shown)h+='<button type="button" class="more" id="more">Показать ещё ('+(rows.length-shown)+')</button>';
-  body.innerHTML=h;document.getElementById('jcount').textContent=rows.length?'записей: '+rows.length:'';
+  body.innerHTML=h;bindPlan();document.getElementById('jcount').textContent=rows.length?'записей: '+rows.length:'';
   var m=document.getElementById('more');if(m)m.onclick=function(){shown+=PAGE;render();};
   live.innerHTML='Данные из таблицы: <b>'+new Date().toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</b>';
  }).catch(function(){live.textContent='Данные недоступны — нет связи или вкладка не опубликована. Обновите страницу позже.';body.innerHTML='';});}
