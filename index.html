@@ -115,6 +115,22 @@ footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padd
 .qr{background:#fff;padding:10px;border-radius:12px;width:180px;max-width:100%;flex:none}
 .qr svg{display:block;width:100%;height:auto}
 .url{font-weight:600;color:var(--plum);word-break:break-all}
+/* task board */
+.board{display:flex;flex-direction:column;gap:8px}
+details.tmonth{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:2px 14px}
+details.tmonth summary{cursor:pointer;font-weight:700;padding:9px 0;color:var(--plum)}
+details.tmonth summary:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+ol.tasks{list-style:none;margin:0 0 8px;padding:0}
+.task{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;gap:4px 10px;align-items:baseline;padding:8px 0 8px 10px;border-top:1px solid var(--line);border-left:4px solid var(--idle)}
+.tn{font-weight:700;color:var(--plum);font-variant-numeric:tabular-nums;font-size:17px}
+.tt{min-width:0;font-size:15px}
+.tt small{display:block;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.tw{white-space:nowrap;font-size:15px}
+.ts{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--idle-bg);color:var(--idle);white-space:nowrap}
+.task.done{border-left-color:var(--go)} .task.done .ts{background:var(--go-bg);color:var(--go)} .task.done .tt{color:var(--muted)}
+.task.note,.task.soon{border-left-color:var(--wait)} .task.note .ts,.task.soon .ts{background:var(--wait-bg);color:var(--wait)}
+.task.late{border-left-color:var(--stop)} .task.late .ts{background:var(--stop-bg);color:var(--stop)}
+@media (max-width:460px){.task{grid-template-columns:40px minmax(0,1fr)}.tw{grid-column:2;grid-row:2;justify-self:start}.ts{grid-column:2;grid-row:2;justify-self:end}}
 </style>
 </head>
 <body>
@@ -129,13 +145,13 @@ footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padd
   <p class="sub">Доска главного врача и справочник для сотрудников. Здесь ничего не заполняют: записи ведутся на бумаге в папках у главного врача, сайт показывает порядок дел и ссылки.</p>
   <span class="upd">Обновлено 18.10.2026 · система начинает работу 02.11.2026</span>
   <nav class="jump" aria-label="Разделы">
-    <a href="#now">Светофор</a><a href="#cal">Календарь</a><a href="#month">Ритм месяца</a><a href="#incident">Если случилось</a><a href="#who">Кто за что</a><a href="#changes">Изменения</a><a href="#docs">Документы</a>
+    <a href="#now">Светофор</a><a href="#tasks">Задачи</a><a href="#cal">Календарь</a><a href="#month">Ритм месяца</a><a href="#incident">Если случилось</a><a href="#who">Кто за что</a><a href="#changes">Изменения</a><a href="#docs">Документы</a>
   </nav>
 </header>
 
 <section id="now">
   <h2>Светофор</h2>
-  <p class="lead">Состояние узлов контроля. Обновляется раз в сутки, вечером, по отметкам главного врача и управляющего в Telegram-группе.</p>
+  <p class="lead">Состояние узлов контроля. Обновляется каждое утро по отметкам главного врача и управляющего в Telegram-группе.</p>
   <div class="facts">
     <div class="fact"><span class="k">Последний обход</span><b>первый — до 10.12.2026</b></div>
     <div class="fact"><span class="k">Квартал IV 2026 · жалобы</span><b>—</b></div>
@@ -158,6 +174,116 @@ footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padd
     <span><span class="dot" style="background:var(--wait)"></span>срок близко или есть замечание</span>
     <span><span class="dot" style="background:var(--stop)"></span>просрочено или нужно действие</span>
     <span><span class="dot" style="background:var(--idle)"></span>срок ещё не подошёл</span>
+  </div>
+</section>
+
+<section id="tasks">
+  <h2>Задачи</h2>
+  <p class="lead">У каждой задачи свой номер. Сделали — напишите в Telegram-группу номер и «сделали», например: <b>«108 сделали»</b> или «108 замечание: нет подписи за 12.11». Доска обновляется каждое утро.</p>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--go)"></span>сделано</span>
+    <span><span class="dot" style="background:var(--wait)"></span>срок в ближайшие 7 дней или замечание</span>
+    <span><span class="dot" style="background:var(--stop)"></span>срок прошёл</span>
+    <span><span class="dot" style="background:var(--idle)"></span>открыто</span>
+  </div>
+  <div class="board">
+    <details class="tmonth" open><summary>Ноябрь 2026</summary>
+    <ol class="tasks">
+      <li class="task" data-n="101" data-due="2026-11-02"><span class="tn">101</span><span class="tt">Старт внутреннего контроля: подписать приказы и ознакомить работников<small>до 02.11</small></span><span class="tw"><span class="mgr">▶</span><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="102" data-due="2026-11-06"><span class="tn">102</span><span class="tt">Документы медицинских работников → «Работники и допуск» (65-1)<small>до 06.11</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="103" data-due="2026-11-13"><span class="tn">103</span><span class="tt">Аппараты: удостоверения и договоры (65-3); начать журналы 62-1…62-3<small>до 13.11</small></span><span class="tw"><span class="mgr">▶</span><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="104" data-due="2026-11-20"><span class="tn">104</span><span class="tt">Матрица допуска (65-2); сверка кодов услуг с прайсом и договором<small>до 20.11</small></span><span class="tw"><span class="mgr">▶</span><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="105" data-due="2026-11-27"><span class="tn">105</span><span class="tt">Тренировка «Анафилаксия» + тест (49-07Б) для всех медработников<small>до 27.11</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="106" data-due="2026-11-30"><span class="tn">106</span><span class="tt">Часы главного врача за ноябрь (67)<small>до 30.11</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth" open><summary>Декабрь 2026</summary>
+    <ol class="tasks">
+      <li class="task" data-n="107" data-due="2026-12-05"><span class="tn">107</span><span class="tt">Проверки за ноябрь: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.12</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="108" data-due="2026-12-10"><span class="tn">108</span><span class="tt">Обход за ноябрь: все журналы по описи (60)<small>до 10.12</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="109" data-due="2026-12-18"><span class="tn">109</span><span class="tt">Плановая проверка IV квартала 2026 (63-1)<small>до 18.12</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="110" data-due="2026-12-25"><span class="tn">110</span><span class="tt">План проверок на 2027 год (44); пересмотр процедур<small>до 25.12</small></span><span class="tw"><span class="mgr">▶</span><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="111" data-due="2026-12-31"><span class="tn">111</span><span class="tt">Часы главного врача за декабрь (67)<small>до 31.12</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Январь 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="112" data-due="2027-01-05"><span class="tn">112</span><span class="tt">Проверки за декабрь: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.01</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="113" data-due="2027-01-10"><span class="tn">113</span><span class="tt">Обход за декабрь: все журналы по описи (60)<small>до 10.01</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="114" data-due="2027-01-20"><span class="tn">114</span><span class="tt">Итоги внутреннего контроля за 2026 год (64-1)<small>до 20.01</small></span><span class="tw"><span class="mgr">▶</span><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="115" data-due="2027-01-31"><span class="tn">115</span><span class="tt">Часы главного врача за январь (67)<small>до 31.01</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Февраль 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="116" data-due="2027-02-05"><span class="tn">116</span><span class="tt">Проверки за январь: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.02</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="117" data-due="2027-02-10"><span class="tn">117</span><span class="tt">Обход за январь: все журналы по описи (60)<small>до 10.02</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="118" data-due="2027-02-28"><span class="tn">118</span><span class="tt">Часы главного врача за февраль (67)<small>до 28.02</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Март 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="119" data-due="2027-03-05"><span class="tn">119</span><span class="tt">Проверки за февраль: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.03</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="120" data-due="2027-03-10"><span class="tn">120</span><span class="tt">Обход за февраль: все журналы по описи (60)<small>до 10.03</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="121" data-due="2027-03-18"><span class="tn">121</span><span class="tt">Плановая проверка I квартала 2027 (63-1)<small>до 18.03</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="122" data-due="2027-03-31"><span class="tn">122</span><span class="tt">Часы главного врача за март (67)<small>до 31.03</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Апрель 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="123" data-due="2027-04-05"><span class="tn">123</span><span class="tt">Проверки за март: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.04</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="124" data-due="2027-04-10"><span class="tn">124</span><span class="tt">Обход за март: все журналы по описи (60)<small>до 10.04</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="125" data-due="2027-04-30"><span class="tn">125</span><span class="tt">Часы главного врача за апрель (67)<small>до 30.04</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Май 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="126" data-due="2027-05-05"><span class="tn">126</span><span class="tt">Проверки за апрель: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.05</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="127" data-due="2027-05-10"><span class="tn">127</span><span class="tt">Обход за апрель: все журналы по описи (60)<small>до 10.05</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="128" data-due="2027-05-31"><span class="tn">128</span><span class="tt">Часы главного врача за май (67)<small>до 31.05</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Июнь 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="129" data-due="2027-06-05"><span class="tn">129</span><span class="tt">Проверки за май: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.06</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="130" data-due="2027-06-10"><span class="tn">130</span><span class="tt">Обход за май: все журналы по описи (60)<small>до 10.06</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="131" data-due="2027-06-18"><span class="tn">131</span><span class="tt">Плановая проверка II квартала 2027 (63-1)<small>до 18.06</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="132" data-due="2027-06-30"><span class="tn">132</span><span class="tt">Часы главного врача за июнь (67)<small>до 30.06</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Июль 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="133" data-due="2027-07-05"><span class="tn">133</span><span class="tt">Проверки за июнь: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.07</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="134" data-due="2027-07-10"><span class="tn">134</span><span class="tt">Обход за июнь: все журналы по описи (60)<small>до 10.07</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="135" data-due="2027-07-15"><span class="tn">135</span><span class="tt">Итоги I полугодия 2027 (64-1)<small>до 15.07</small></span><span class="tw"><span class="mgr">▶</span><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="136" data-due="2027-07-31"><span class="tn">136</span><span class="tt">Часы главного врача за июль (67)<small>до 31.07</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Август 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="137" data-due="2027-08-05"><span class="tn">137</span><span class="tt">Проверки за июль: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.08</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="138" data-due="2027-08-10"><span class="tn">138</span><span class="tt">Обход за июль: все журналы по описи (60)<small>до 10.08</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="139" data-due="2027-08-31"><span class="tn">139</span><span class="tt">Часы главного врача за август (67)<small>до 31.08</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Сентябрь 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="140" data-due="2027-09-05"><span class="tn">140</span><span class="tt">Проверки за август: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.09</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="141" data-due="2027-09-10"><span class="tn">141</span><span class="tt">Обход за август: все журналы по описи (60)<small>до 10.09</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="142" data-due="2027-09-17"><span class="tn">142</span><span class="tt">Плановая проверка III квартала 2027 (63-1)<small>до 17.09</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="143" data-due="2027-09-30"><span class="tn">143</span><span class="tt">Часы главного врача за сентябрь (67)<small>до 30.09</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Октябрь 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="144" data-due="2027-10-05"><span class="tn">144</span><span class="tt">Проверки за сентябрь: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.10</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="145" data-due="2027-10-10"><span class="tn">145</span><span class="tt">Обход за сентябрь: все журналы по описи (60)<small>до 10.10</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="146" data-due="2027-10-31"><span class="tn">146</span><span class="tt">Часы главного врача за октябрь (67)<small>до 31.10</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Ноябрь 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="147" data-due="2027-11-05"><span class="tn">147</span><span class="tt">Проверки за октябрь: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.11</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="148" data-due="2027-11-10"><span class="tn">148</span><span class="tt">Обход за октябрь: все журналы по описи (60)<small>до 10.11</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="149" data-due="2027-11-26"><span class="tn">149</span><span class="tt">Тренировка «Анафилаксия» 2027 + тест (49-07Б)<small>до 26.11</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="150" data-due="2027-11-30"><span class="tn">150</span><span class="tt">Часы главного врача за ноябрь (67)<small>до 30.11</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
+    <details class="tmonth"><summary>Декабрь 2027</summary>
+    <ol class="tasks">
+      <li class="task" data-n="151" data-due="2027-12-05"><span class="tn">151</span><span class="tt">Проверки за ноябрь: холодильник (62-1), укладка (62-2), уборки (62-3)<small>до 05.12</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="152" data-due="2027-12-10"><span class="tn">152</span><span class="tt">Обход за ноябрь: все журналы по описи (60)<small>до 10.12</small></span><span class="tw"><span class="mgr">▶</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="153" data-due="2027-12-17"><span class="tn">153</span><span class="tt">Плановая проверка IV квартала 2027 (63-1)<small>до 17.12</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="154" data-due="2027-12-25"><span class="tn">154</span><span class="tt">План на 2028 (44); пересмотр процедур и матрицы 65-2; новая папка 2<small>до 25.12</small></span><span class="tw"><span class="mgr">▶</span><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+      <li class="task" data-n="155" data-due="2027-12-31"><span class="tn">155</span><span class="tt">Часы главного врача за декабрь (67)<small>до 31.12</small></span><span class="tw"><span class="doc">✱</span></span><span class="ts">открыто</span></li>
+    </ol></details>
   </div>
 </section>
 
@@ -269,5 +395,13 @@ footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padd
 <footer>Сайт только для просмотра. Записи — на бумаге, в папках 1 и 2 у главного врача. Данных пациентов и личных данных сотрудников здесь нет.</footer>
 </div>
 
+<script>
+/* Доска задач: подсветка сроков по сегодняшней дате (сделанные и с замечанием не трогаем) */
+(function(){var t=new Date();t.setHours(0,0,0,0);var s=new Date(t);s.setDate(t.getDate()+7);
+document.querySelectorAll('.task').forEach(function(li){if(li.classList.contains('done')||li.classList.contains('note'))return;
+var d=new Date(li.getAttribute('data-due')+'T00:00:00');var st=li.querySelector('.ts');
+if(d<t){li.classList.add('late');st.textContent='срок прошёл';}else if(d<=s){li.classList.add('soon');st.textContent='скоро';}});
+document.querySelectorAll('details.tmonth').forEach(function(g){if(g.querySelector('.task.late,.task.soon,.task.note'))g.open=true;});})();
+</script>
 </body>
 </html>
