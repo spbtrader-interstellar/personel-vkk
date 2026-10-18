@@ -205,6 +205,8 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
 .chip.ok{background:var(--go-bg);color:var(--go)}
 @media (max-width:460px){.items li{font-size:16px}}
 h3.sub3{margin:6px 0 0;font-size:16px}
+.calnote{margin:8px 2px 0;font-size:13.5px;color:var(--muted)}
+.calnote a{color:var(--plum)}
 </style>
 </head>
 <body>
@@ -232,7 +234,7 @@ h3.sub3{margin:6px 0 0;font-size:16px}
 <script>
 (function(){
 var BASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vTznMTE4JARrDUguO9Qu5o8gz_Bc6AGjBYJrZzPOHzVYXt6oFID5xb3Qqw2uws7NjCmZOzY1OnJIO8U/pub?single=true&output=csv&gid=';
-var BTN=3102, PAGE=20;
+var BTN=3102, TASKS=3006, PAGE=20, NEXT=3;
 /* Журналы: gid появляется, когда вкладку опубликуют */
 var J=[
  {id:'62-2',tab:'🧰 Укладка',title:'Журнал проверки укладки для экстренной помощи (62-2)',gid:3101,freq:'раз в месяц до 5-го и после каждого использования',who:'✱ главный врач'},
@@ -268,6 +270,17 @@ function planItem(r){var st=(r[7]||'').trim(),c,ch;
  return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span></div> <b>Задача '+esc(r[1])+' · '+esc(r[4]||'')+'</b> '+(r[5]?'<span class="meta">срок '+esc(r[5])+'</span>':'')+'</li>';}
 function recItem(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]),c=w?'warn':(t?'test':'ok');
  return '<li class="'+c+'"><div class="itop"><span class="chip '+(w?'warn':'ok')+'">'+(w?'⚠️ Замечание':'✅ В порядке')+'</span>'+(t?' <span class="chip test">🧪 учебная (тест)</span>':'')+'</div> <b>'+esc(t?'Тестовая запись':r[1])+'</b> '+(r[4]?'<span class="rem">'+esc(r[4])+'</span> ':'')+'<span class="meta">'+esc(r[5])+' · '+dmt(r[6])+' · № '+esc(r[0])+'</span></li>';}
+/* Сроки из «Задачи 2026–2027» (по ним же — Google Календарь «ВКК Персонель»): задачи, где в тексте стоит (номер журнала) */
+function pd(s){var m=String(s||'').match(/(\d{2})\.(\d{2})\.(\d{4})/);return m?new Date(+m[3],m[2]-1,+m[1]):null;}
+function dueTasks(rows,id,skip){var re=new RegExp('\\('+id+'\\)'),t0=new Date();t0.setHours(0,0,0,0);
+ return rows.slice(4).filter(function(r){return r[0]&&re.test(r[2]||'')&&!/[☑⚠]/.test(r[4]||'')&&skip.indexOf(String(r[0]))<0;})
+  .map(function(r){var d=pd(r[1]);return d?{r:r,d:d,days:Math.round((d-t0)/864e5)}:null;}).filter(Boolean).sort(function(a,b){return a.d-b.d;});}
+function taskItem(x){var r=x.r,dd=esc(String(r[1]).slice(0,5)),c,ch;
+ if(x.days<0){c='stop';ch='⚠ срок прошёл '+dd;}else if(x.days<=7){c='now';ch='⏰ скоро · до '+dd;}else{c='plan';ch='🗓 до '+esc(r[1]);}
+ return '<li class="'+c+'"><div class="itop"><span class="chip '+c+'">'+ch+'</span> <span class="chip plan">'+esc(r[3]||'')+'</span></div> <b>Задача '+esc(r[0])+' · '+esc(r[2])+'</b></li>';}
+/* просроченные — все, предстоящие — ближайшие NEXT */
+function taskList(xs){var past=xs.filter(function(x){return x.days<0;}),fut=xs.filter(function(x){return x.days>=0;});return past.concat(fut.slice(0,NEXT));}
+function calnote(rest){return '<p class="calnote">'+(rest>0?'Дальше ещё '+rest+' '+(rest%10==1&&rest%100!=11?'срок':(rest%10>=2&&rest%10<=4&&(rest%100<10||rest%100>=20)?'срока':'сроков'))+' — все':'Все сроки')+' в <a href="./#cal">Google Календаре «ВКК Персонель»</a> (номер задачи — в названии события).</p>';}
 function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'"><h3>'+icon+' '+title+' <span class="cnt" title="Сколько всего">всего '+(cnt==null?items.length:cnt)+'</span></h3>'+(items.length?'<ul class="items">'+items.join('')+'</ul>':'<p class="empty">'+empty+'</p>')+'</div>';}
 
 var tabs=document.getElementById('tabs'),body=document.getElementById('jbody'),live=document.getElementById('jlive');
@@ -286,8 +299,14 @@ function show(id,push){var j=J.filter(function(x){return x.id==id;})[0]||J[0];cu
  document.getElementById('curname').textContent=j.tab;
  if(push)history.replaceState(null,'','#'+j.id);try{localStorage.setItem('vkk-j',j.id);}catch(e){}
  document.getElementById('jtitle').textContent=j.title;render();}
-function render(){var j=cur;if(!j.on){live.textContent='';document.getElementById('jcount').textContent='';body.innerHTML='<div class="panel soonp"><h3>🔜 Скоро</h3><p class="empty"><b>'+esc(j.desc||'')+'</b></p><p class="empty">Как часто: '+esc(j.freq||'')+' · кто отмечает: '+esc(j.who||'')+'</p><p class="empty">Пока журнал ведётся на бумаге в папке у главного врача — как обычно. Вкладка включится, когда подключим кнопки в Telegram.</p></div>';return;}live.textContent='Загружаю…';
- Promise.all([get(j.gid),get(BTN)]).then(function(d){if(cur!==j)return;
+function render(){var j=cur;if(!j.on){live.textContent='';document.getElementById('jcount').textContent='';
+ var soon='<div class="panel soonp"><h3>🔜 Скоро</h3><p class="empty"><b>'+esc(j.desc||'')+'</b></p><p class="empty">Как часто: '+esc(j.freq||'')+' · кто отмечает: '+esc(j.who||'')+'</p><p class="empty">Пока журнал ведётся на бумаге в папке у главного врача — как обычно. Вкладка включится, когда подключим кнопки в Telegram.</p></div>';
+ body.innerHTML='<div class="panel plan"><h3>🕐 Запланировано</h3><p class="empty">Загружаю сроки…</p></div>'+soon;
+ get(TASKS).then(function(t){if(cur!==j)return;var xs=dueTasks(t,j.id,[]),li=taskList(xs).map(taskItem);
+  body.innerHTML=panel('plan','🕐','Запланировано',li,'В плане задач сроков для этого журнала пока нет').replace(/<\/div>$/,calnote(xs.length-li.length)+'</div>')+soon;
+  live.innerHTML='Сроки из плана задач: <b>'+new Date().toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</b>';
+ }).catch(function(){if(cur!==j)return;body.innerHTML=soon;live.textContent='Сроки сейчас недоступны — обновите страницу позже.';});return;}live.textContent='Загружаю…';
+ Promise.all([get(j.gid),get(BTN),get(TASKS).catch(function(){return [];})]).then(function(d){if(cur!==j)return;
   var rows=d[0].slice(4).filter(function(r){return r[0];}).reverse();
   if(j.ev){var evs=rows.filter(function(r){return r[2]||r[5]!='ЖДЁТ ТЕКСТ';});
    var openE=evs.filter(function(r){return r[5]=='ОТКРЫТО'||r[5]=='В РАБОТЕ';});
@@ -301,7 +320,8 @@ function render(){var j=cur;if(!j.on){live.textContent='';document.getElementByI
   var pend=d[1].slice(4).filter(function(r){return r[0]&&String(r[3]).indexOf(j.id)==0;});
   var plan=pend.filter(function(r){return /ОТПРАВЛЕНО|ЖДЁТ ТЕКСТ|ОТЛОЖЕНО|^ЖДЁТ$/.test((r[7]||'').trim());});
   plan.sort(function(x,y){return (x[7]=='ЖДЁТ')-(y[7]=='ЖДЁТ');});
-  var h=panel('plan','🕐','Запланировано',plan.map(planItem),'Сейчас ничего не запланировано')+panel('rec','📒','Записи',rows.slice(0,shown).map(recItem),'Записей пока нет',rows.length);
+  var xs=dueTasks(d[2],j.id,pend.map(function(r){return String(r[1]);})),tl=taskList(xs);
+  var h=panel('plan','🕐','Запланировано',plan.map(planItem).concat(tl.map(taskItem)),'Сейчас ничего не запланировано').replace(/<\/div>$/,calnote(xs.length-tl.length)+'</div>')+panel('rec','📒','Записи',rows.slice(0,shown).map(recItem),'Записей пока нет',rows.length);
   if(rows.length>shown)h+='<button type="button" class="more" id="more">Показать ещё ('+(rows.length-shown)+')</button>';
   body.innerHTML=h;document.getElementById('jcount').textContent=rows.length?'записей: '+rows.length:'';
   var m=document.getElementById('more');if(m)m.onclick=function(){shown+=PAGE;render();};
