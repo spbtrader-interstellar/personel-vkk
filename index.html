@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Персонель · Внутренний контроль</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Literata:opsz,wght@7..72,600;7..72,700&display=swap">
+<style>
+/* Layout: one narrow scrolling feed (max 860px); sections stacked; status tiles in a 3-col grid that collapses to 1 col on phone */
+:root{
+  --bg:#f8f5f7; --card:#ffffff; --ink:#271c26; --muted:#6e6070; --line:#e8dde5;
+  --plum:#5b1459; --pink:#e43f6f; --soft:#fbeef3;
+  --go:#1f8a3b; --go-bg:#e7f5ea; --wait:#b7791f; --wait-bg:#fdf3e1; --stop:#c62828; --stop-bg:#fdeaea; --idle:#8c8290; --idle-bg:#f0ecef;
+  --doc:#c40000; --mgr:#1f61d9;
+  --display:"Literata", Georgia, serif; --body:"Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#18121a; --card:#221a23; --ink:#f2e9ef; --muted:#b5a6b3; --line:#382c38;
+  --plum:#e9a8e4; --pink:#ff7a9c; --soft:#2c1f2b;
+  --go:#6fd38a; --go-bg:#16301d; --wait:#f0b45a; --wait-bg:#33260f; --stop:#ff7b7b; --stop-bg:#3a1717; --idle:#a89ca8; --idle-bg:#2a2229;
+  --doc:#ff6b6b; --mgr:#86adff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#18121a; --card:#221a23; --ink:#f2e9ef; --muted:#b5a6b3; --line:#382c38;
+  --plum:#e9a8e4; --pink:#ff7a9c; --soft:#2c1f2b;
+  --go:#6fd38a; --go-bg:#16301d; --wait:#f0b45a; --wait-bg:#33260f; --stop:#ff7b7b; --stop-bg:#3a1717; --idle:#a89ca8; --idle-bg:#2a2229;
+  --doc:#ff6b6b; --mgr:#86adff; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;margin:0}
+.feed{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 72px;display:flex;flex-direction:column;gap:44px}
+a{color:inherit}
+.top{display:flex;flex-direction:column;gap:10px}
+.brand{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--pink);font-weight:700}
+h1{font-family:var(--display);font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0;color:var(--plum);text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:62ch}
+.demo{align-self:flex-start;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--wait-bg);color:var(--wait);font-weight:600}
+nav.jump{display:flex;flex-wrap:wrap;gap:6px}
+nav.jump a{font-size:13.5px;text-decoration:none;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+nav.jump a:hover,nav.jump a:focus-visible{border-color:var(--pink);color:var(--pink);outline:none}
+section{display:flex;flex-direction:column;gap:14px;scroll-margin-top:12px}
+h2{font-family:var(--display);font-size:25px;margin:0;color:var(--plum);text-wrap:balance}
+.lead{margin:0;color:var(--muted);max-width:64ch}
+/* traffic light */
+.lights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:720px){.lights{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:460px){.lights{grid-template-columns:1fr}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0;border-left:5px solid var(--idle)}
+.tile.go{border-left-color:var(--go)} .tile.wait{border-left-color:var(--wait)} .tile.stop{border-left-color:var(--stop)}
+.tile .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tile .name{font-weight:600}
+.code{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{align-self:flex-start;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px}
+.go .pill{background:var(--go-bg);color:var(--go)} .wait .pill{background:var(--wait-bg);color:var(--wait)} .stop .pill{background:var(--stop-bg);color:var(--stop)} .idle .pill{background:var(--idle-bg);color:var(--idle)}
+.tile p{margin:0;font-size:14px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:baseline}
+/* dates */
+.dates{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.dates li{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);align-items:baseline}
+.dates .d{font-weight:700;font-variant-numeric:tabular-nums;color:var(--plum)}
+.dates .who{font-size:15px;white-space:nowrap}
+@media (max-width:460px){.dates li{grid-template-columns:78px minmax(0,1fr)}.dates .who{grid-column:2}}
+.doc{color:var(--doc);font-weight:700}.mgr{color:var(--mgr);font-weight:700}
+/* rhythm */
+.rhythm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.rhythm{grid-template-columns:1fr}}
+.step{background:var(--soft);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.step .when{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--pink);font-weight:700}
+.step b{font-size:17px}
+.step p{margin:0;font-size:14.5px}
+/* incidents */
+.inc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.inc{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h3{margin:0 0 6px;font-size:17px}
+.card ol{margin:0;padding-left:20px;font-size:14.5px}
+.card li{margin:3px 0}
+.card .form{margin-top:8px;font-size:13px;color:var(--muted)}
+.card.red{border-color:var(--stop);background:var(--stop-bg)}
+/* people */
+.people{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.people{grid-template-columns:1fr}}
+.person{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line);min-width:0}
+.mark{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--soft)}
+.person b{display:block}
+.person span{font-size:14.5px;color:var(--muted)}
+/* docs */
+.folder{display:flex;flex-direction:column;gap:2px}
+.folder h3{margin:8px 0 6px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dl{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:8px 2px;border-bottom:1px solid var(--line);text-decoration:none}
+.dl:hover .t,.dl:focus-visible .t{color:var(--pink);text-decoration:underline}
+.dl:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.dl .n{font-weight:700;color:var(--plum);font-variant-numeric:tabular-nums}
+.dl .tag{font-size:12px;color:var(--muted);white-space:nowrap}
+footer{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+.upd{align-self:flex-start;font-size:13px;padding:4px 10px;border-radius:999px;background:var(--soft);color:var(--plum);font-weight:600}
+.sos{background:var(--stop);color:#fff}
+.sos-in{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:9px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;line-height:1.4}
+.sos-in b{font-size:15px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sos{background:#8f1d1d}}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fact{background:var(--soft);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.fact .k{font-size:12.5px;color:var(--muted)}
+.fact b{font-size:16px;font-variant-numeric:tabular-nums}
+.btn{align-self:flex-start;text-decoration:none;font-weight:600;padding:9px 16px;border-radius:999px;background:var(--plum);color:var(--bg)}
+.btn:hover,.btn:focus-visible{background:var(--pink);outline:none}
+.calwrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.calwrap iframe{display:block;width:100%;height:480px;border:0}
+.qrrow{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.qr{background:#fff;padding:10px;border-radius:12px;width:180px;max-width:100%;flex:none}
+.qr svg{display:block;width:100%;height:auto}
+.url{font-weight:600;color:var(--plum);word-break:break-all}
+</style>
+</head>
+<body>
+<div class="sos" role="note">
+  <div class="sos-in"><b>Угроза жизни — звоните 103 или 112</b><span>Адрес для скорой: Екатеринбург, ул. Фурманова, 66 · укладка — каб. № ___ · памятка «Анафилаксия» на стене</span></div>
+</div>
+<div class="feed">
+
+<header class="top">
+  <div class="brand">Персонель · косметология · Екатеринбург</div>
+  <h1>Внутренний контроль</h1>
+  <p class="sub">Доска главного врача и справочник для сотрудников. Здесь ничего не заполняют: записи ведутся на бумаге в папках у главного врача, сайт показывает порядок дел и ссылки.</p>
+  <span class="upd">Обновлено 18.10.2026 · система начинает работу 02.11.2026</span>
+  <nav class="jump" aria-label="Разделы">
+    <a href="#now">Светофор</a><a href="#cal">Календарь</a><a href="#month">Ритм месяца</a><a href="#incident">Если случилось</a><a href="#who">Кто за что</a><a href="#changes">Изменения</a><a href="#docs">Документы</a>
+  </nav>
+</header>
+
+<section id="now">
+  <h2>Светофор</h2>
+  <p class="lead">Состояние узлов контроля. Обновляет управляющий после ежемесячного обхода.</p>
+  <div class="facts">
+    <div class="fact"><span class="k">Последний обход</span><b>первый — до 10.12.2026</b></div>
+    <div class="fact"><span class="k">Квартал IV 2026 · жалобы</span><b>—</b></div>
+    <div class="fact"><span class="k">Осложнения</span><b>—</b></div>
+    <div class="fact"><span class="k">Нарушения устранено</span><b>—</b></div>
+  </div>
+  <div class="lights">
+    <div class="tile idle"><div class="h"><span class="name">🌡️ Холодильник</span><span class="code">62-1</span></div><span class="pill">ещё не начато</span><p>Первая проверка — до 05.12 за ноябрь</p></div>
+    <div class="tile idle"><div class="h"><span class="name">🧰 Укладка</span><span class="code">62-2</span></div><span class="pill">ещё не начато</span><p>Первая проверка — до 05.12 за ноябрь</p></div>
+    <div class="tile idle"><div class="h"><span class="name">🧹 Генеральные уборки</span><span class="code">62-3</span></div><span class="pill">ещё не начато</span><p>Первая сверка — до 05.12 за ноябрь</p></div>
+    <div class="tile idle"><div class="h"><span class="name">📋 Плановая проверка IV кв.</span><span class="code">63-1</span></div><span class="pill">ещё не начато</span><p>01–18.12.2026</p></div>
+    <div class="tile wait"><div class="h"><span class="name">👥 Работники и допуск</span><span class="code">65-1 · 65-2</span></div><span class="pill">подготовка</span><p>Документы медработников — до 06.11; матрица допуска — до 20.11</p></div>
+    <div class="tile stop"><div class="h"><span class="name">⚙️ Оборудование</span><span class="code">65-3 · 65-4</span></div><span class="pill">нужно действие</span><p>Удостоверения и договоры аппаратов не внесены — до 13.11</p></div>
+    <div class="tile idle"><div class="h"><span class="name">🚨 Жалобы и осложнения</span><span class="code">66-1…66-5</span></div><span class="pill">журнал с 02.11</span><p>Если случилось — смотрите раздел ниже</p></div>
+    <div class="tile idle"><div class="h"><span class="name">⏳ Время главного врача</span><span class="code">67</span></div><span class="pill">подготовка</span><p>Октябрь: план 4,5 ч · на 2027 год — 53,5 ч</p></div>
+    <div class="tile idle"><div class="h"><span class="name">📊 Итоги</span><span class="code">64-1</span></div><span class="pill">не скоро</span><p>Итоги 2026 года — до 20.01.2027</p></div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--go)"></span>сделано вовремя</span>
+    <span><span class="dot" style="background:var(--wait)"></span>срок близко или есть замечание</span>
+    <span><span class="dot" style="background:var(--stop)"></span>просрочено или нужно действие</span>
+    <span><span class="dot" style="background:var(--idle)"></span>срок ещё не подошёл</span>
+  </div>
+</section>
+
+<section id="cal">
+  <h2>Календарь сроков</h2>
+  <p class="lead">Все сроки внутреннего контроля на 2026–2027 годы. <span class="doc">✱</span> — главный врач, <span class="mgr">▶</span> — управляющий. Добавьте календарь к себе, и напоминания придут на телефон.</p>
+  <a class="btn" href="https://calendar.google.com/calendar/u/0?cid=OTk5NTc5ZTdmYzYzNjBjMDc5ZGRiNzQyMjUzNDFmMTU5YjI1MjE0YmZkY2M2OWY3ZTNjMjc5YTBlZTNlNDhmOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t" target="_blank" rel="noopener">+ Добавить в мой Google Календарь</a>
+  <div class="calwrap"><iframe title="Календарь ВКК Персонель" src="https://calendar.google.com/calendar/embed?src=999579e7fc6360c079ddb74225341f159b25214bfdcc69f7e3c279a0ee3e48f8%40group.calendar.google.com&amp;ctz=Asia%2FYekaterinburg&amp;hl=ru&amp;mode=AGENDA&amp;showTitle=0&amp;showPrint=0&amp;showTabs=1&amp;showCalendars=0&amp;showTz=0" loading="lazy"></iframe></div>
+</section>
+
+<section id="month">
+  <h2>Ритм месяца</h2>
+  <div class="rhythm">
+    <div class="step"><span class="when">до 5-го</span><b>Главный врач <span class="doc">✱</span></b><p>Холодильник (62-1), укладка (62-2), генеральные уборки (62-3) — отметка и подпись.</p></div>
+    <div class="step"><span class="when">до 10-го</span><b>Обход с управляющим <span class="mgr">▶</span></b><p>Вместе проходят все листы папки 2 по описи (60), управляющий подписывает и решает меры.</p></div>
+    <div class="step"><span class="when">конец месяца</span><b>Время главного врача <span class="doc">✱</span></b><p>Фактические часы и лента «сверх плана» (67). Сверх плана можно писать в MAX.</p></div>
+  </div>
+</section>
+
+<section id="incident">
+  <h2>Если случилось</h2>
+  <p class="lead">Для всех сотрудников. Сообщать управляющему — в MAX: это заменяет рапорт, сообщение принято, когда он ответил «получил».</p>
+  <div class="inc">
+    <div class="card red"><h3>Анафилаксия, угроза жизни</h3><ol><li>Помощь сразу, вызвать 103 / 112.</li><li>Укладка — каб. № ___, памятка на стене (49-07А).</li><li>Главному врачу и управляющему — сразу.</li></ol><div class="form">Порядок: процедура 07 (49-07)</div></div>
+    <div class="card"><h3>Осложнение после процедуры</h3><ol><li>Остановить процедуру, помочь пациенту.</li><li>Сохранить препарат или изделие, аппарат не использовать.</li><li>Сообщить главному врачу и управляющему в MAX.</li></ol><div class="form">Запись: 66-2 · порядок: процедура 06 (49-06)</div></div>
+    <div class="card"><h3>Жалоба пациента</h3><ol><li>Выслушать, предложить написать, поставить дату.</li><li>В тот же день передать управляющему.</li><li>С пациентом не спорить, компенсацию не обещать.</li></ol><div class="form">Запись: 66-1 · порядок: Положение 42, приложение</div></div>
+    <div class="card"><h3>Сломалось или не хватает</h3><ol><li>Аппарат не использовать до ремонта.</li><li>Коротко написать управляющему в MAX: что, где, когда.</li><li>Дождаться ответа «получил».</li></ol><div class="form">Запись: 66-4 (делает управляющий)</div></div>
+  </div>
+</section>
+
+<section id="who">
+  <h2>Кто за что</h2>
+  <div class="people">
+    <div class="person"><span class="mark doc">✱</span><div><b>Почепко Л.Ю. — главный врач</b><span>Уполномоченное лицо по качеству и безопасности. Ведёт папки 1 и 2, проверки, допуск, разбор жалоб и осложнений.</span></div></div>
+    <div class="person"><span class="mark mgr">▶</span><div><b>Полянский В.М. — управляющий</b><span>Готовит документы, раз в месяц проходит журналы с главным врачом, решает организационные меры.</span></div></div>
+    <div class="person"><span class="mark">В</span><div><b>Вялых О.Е. — врач-косметолог</b><span>Сообщения в Росздравнадзор. В отсутствие главного врача — первичный разбор жалоб и осложнений.</span></div></div>
+    <div class="person"><span class="mark">К</span><div><b>Волкова К.Н.</b><span>Организует ознакомление сотрудников с приказами и документами (приказ 41).</span></div></div>
+  </div>
+</section>
+
+<section id="changes">
+  <h2>Что изменилось в документах</h2>
+  <p class="lead">Если документ изменился, с ним нужно ознакомиться под подпись.</p>
+  <ul class="dates">
+    <li><span class="d">18.10.2026</span><span><b>65-4</b> Инструктаж на аппаратах — новый лист</span><span class="who">v1.0</span></li>
+    <li><span class="d">18.10.2026</span><span><b>42-1</b> Должностная инструкция главного врача — переписана, ссылается на Положение</span><span class="who">v2.0</span></li>
+    <li><span class="d">18.10.2026</span><span><b>42</b> Положение: связь через MAX вместо рапорта; роль Вялых О.Е.; где хранятся папки</span><span class="who">v2.2</span></li>
+    <li><span class="d">18.10.2026</span><span><b>66-1, 66-2</b> Графа «Первичный разбор в отсутствие главного врача»</span><span class="who">v1.1</span></li>
+    <li><span class="d">18.10.2026</span><span><b>67</b> Лента «Сверх плана» на страницах 3–4</span><span class="who">v1.1</span></li>
+  </ul>
+</section>
+
+<section id="docs">
+  <h2>Документы</h2>
+  <p class="lead">Ссылки открывают Google Документы. Доступ к каждому даёт управляющий.</p>
+  <div class="folder">
+    <h3>Папка 1 · правила</h3>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1-TrMJSozZr_ws9o57qYSoYEOrwvkQq__livnPxDyC2E/edit"><span class="n">40</span><span class="t">Лицевой лист и содержание папки</span><span class="tag">гл. врач</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/12UHeeLKiQ9Ahw9r2o2VbYtpULo_AlzPMJ6GabagERos/edit"><span class="n">41</span><span class="t">Приказ об организации внутреннего контроля</span><span class="tag">все</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1eOnTdxKygrMnYxVdZ8bWSdQsXTZVPNmtmDiYiWgc3Pw/edit"><span class="n">41-1</span><span class="t">Приказ о назначении ответственных за укладку и холодильник</span><span class="tag">все</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/19vv35OQ0Q55CMKankvpSjpvriARTiUa_d7GtAgwdszA/edit"><span class="n">42</span><span class="t">Положение о внутреннем контроле</span><span class="tag">все</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1V1p03O--UJ5s80TB2wksTmAzR_n61T3aXP_2gnaz1KI/edit"><span class="n">42-1</span><span class="t">Должностная инструкция главного врача</span><span class="tag">гл. врач</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1UoB5QmgbagOXBKKr2Y_4-z804OtPvonMtPo27i2Vez8/edit"><span class="n">44</span><span class="t">План плановых проверок</span><span class="tag">гл. врач</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1C5mqhv1uk8S3KXgprdj7iYykhgIjB98YcELX3A4yeE4/edit"><span class="n">45</span><span class="t">Медицинские и бытовые услуги</span><span class="tag">все</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1YZp_eRi9tbxmYk2BDjmJPuDMd2QRL0ipYavqnqYtfOg/edit"><span class="n">49-01</span><span class="t">Процедура 01 · Приём, медицинская карта, согласие</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1fao_NW_wYVxi-X9m0l-1H7uTia_kvRJzMVw0imG33Zk/edit"><span class="n">49-02</span><span class="t">Процедура 02 · Инъекционные и инвазивные процедуры</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1EfDPqKa5G0gdlt-bcr7iOvpuXOGrPqIVr2QYFoIAHZg/edit"><span class="n">49-03</span><span class="t">Процедура 03 · Неинвазивные процедуры</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1LAd_HI3t8_nLJMoWJp_K56h5DYPbWEfKtpXOhTRdr7o/edit"><span class="n">49-04</span><span class="t">Процедура 04 · Лазерные и световые процедуры</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1o3SF_RQSV0HWtnsXXy8JOxAiXIMvdoLg5G7unp905AQ/edit"><span class="n">49-05</span><span class="t">Процедура 05 · Дезинфекция, стерилизация, отходы</span><span class="tag">все</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/17e5RLslZsAtxXMk8ZhhcUE61ySysAajLRVgHyJUx8Gk/edit"><span class="n">49-06</span><span class="t">Процедура 06 · Осложнения и нежелательные события</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1jJFrssTxKpKtz1KhrNtTAybaQcpkVJo77E2MCza8HNs/edit"><span class="n">49-07</span><span class="t">Процедура 07 · Экстренная и неотложная помощь</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1nJOYa-VXuQhJfILqamxQ7sT9Rb2do8NUB0Zmd8Mo8ao/edit"><span class="n">49-07А</span><span class="t">Памятка «Анафилаксия» на стену</span><span class="tag">все</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1bUNspHxlhWJ2Ed3ZN8JNa9-MLA2pMS32TLVcct4XgiY/edit"><span class="n">49-07Б</span><span class="t">Тест «Анафилаксия»</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1w2-RCLF2adgt6NiuZ7XM44NsYk3_G5Wj3aSSwT1t380/edit"><span class="n">49-07В</span><span class="t">Инструкция «Укладка для экстренной помощи»</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1oqV_BW0T6BOeiK2xXUweKORDE3BU8oWUnK7eQ1gkmYQ/edit"><span class="n">49-08</span><span class="t">Процедура 08 · Лекарственные препараты и изделия</span><span class="tag">мед.</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/10RMxRQyvyflI0lYO3Wt2TxnEYpfYZ6NGi3OvIQ98NeU/edit"><span class="n">49-09</span><span class="t">Приложение «Аппараты»</span><span class="tag">мед.</span></a>
+  </div>
+  <div class="folder">
+    <h3>Папка 2 · журнал и бланки</h3>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1zjEOrRhLoQ0F5Sev4ItLUs4WGMbSTC-Ptd5_V737jRU/edit"><span class="n">60</span><span class="t">📁 Маршрут и опись папки 2</span><span class="tag">первый лист</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1XwDTOd-U225yga-LZMGX9iqRxHn3oNgsCYCB1jjlW88/edit"><span class="n">61</span><span class="t">📒 Журнал: титул и календарь</span><span class="tag">весь период</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/11V_AnSQlLtAFYgb9v_4Z1uCaq4TPQ8b-6labrw3FKGI/edit"><span class="n">62-1</span><span class="t">🌡️ Журнал проверки температуры холодильника</span><span class="tag">каждый месяц</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1gix3vXvbHJVIq8C4amPtdaOnVm8VGxy_lKvWMFS5F8Q/edit"><span class="n">62-2</span><span class="t">🧰 Журнал проверки укладки</span><span class="tag">каждый месяц</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/16EyZrUqcu0m780aKbW0be8c5KFWUNUlhJx2xT2pCMVQ/edit"><span class="n">62-3</span><span class="t">🧹 Журнал проверки генеральных уборок</span><span class="tag">каждый месяц</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1-BsqjP4JgfV5extO3cantzX-OyKqDr0CSCMCDY8e70k/edit"><span class="n">63-1</span><span class="t">📋 Отчёты плановых проверок</span><span class="tag">раз в квартал</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1Rx0bOoMn4hFM6Jxf37fiuM6zSP95EC7ELLxm1iKb5yo/edit"><span class="n">63-2</span><span class="t">📢 Стенд и сайт</span><span class="tag">раз в квартал</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1T7IhpO4nZseesnWksizhTYf1zwyBNuQgFG7AOquoHPo/edit"><span class="n">64-1</span><span class="t">📊 Итоги внутреннего контроля</span><span class="tag">полгода и год</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1mtAR8jGjaBon1LAvvCeSaOwMRL6bxBC2fBW2ta2TLu0/edit"><span class="n">65-1</span><span class="t">👥 Работники и допуск</span><span class="tag">при изменениях</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1yDR9q5jZr6-jhMm84QHiGvuHOsem7YlAZUN5Kbnk5dU/edit"><span class="n">65-2</span><span class="t">🔑 Матрица допуска к процедурам и аппаратам</span><span class="tag">при изменениях</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1-wbZqypYoTTJ9n3tqkOgMWl5HGh_H8Zvh3evAWZaJHA/edit"><span class="n">65-3</span><span class="t">⚙️ Оборудование</span><span class="tag">при изменениях</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1iD2RSM5iyv7qKbod22FKdOZKRYPc3L6jfz-PZZbjUaI/edit"><span class="n">65-4</span><span class="t">🎓 Инструктаж на аппаратах</span><span class="tag">при изменениях</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1dkjww7ETqiyBXCg26ktRItI8ioQ3r22M1rn2QWmw0pU/edit"><span class="n">66-1</span><span class="t">💬 Жалобы пациентов</span><span class="tag">если случилось</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1ptSeTfkd5TsWlkznwwK5g73VWrxOTXeCLYAfTKM1KVQ/edit"><span class="n">66-2</span><span class="t">🚨 Осложнения и нежелательные события</span><span class="tag">если случилось</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/10WCEmwltgh04bq2h99WgiQYDjBgH1_ETqT00snyf7Wk/edit"><span class="n">66-3</span><span class="t">⚠️ Нарушения и меры</span><span class="tag">если случилось</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1eUEcpnhUtgDlrYnGfcNWsGA8go4XzRjFxNoX8sUQJps/edit"><span class="n">66-4</span><span class="t">📌 Прочие события</span><span class="tag">если случилось</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1DcPbVRUeSnlv1GkTk2trfAYjJEWAIFTEqGKWsBJWkJg/edit"><span class="n">66-5</span><span class="t">🔍 Акт внеплановой проверки</span><span class="tag">если случилось</span></a>
+    <a class="dl" target="_blank" rel="noopener" href="https://docs.google.com/document/d/1Cpuvf0-DAdgytQFLEsQUqPMkG2IA-_QrkEiGA0CLIE4/edit"><span class="n">67</span><span class="t">⏳ Время главного врача: план и факт</span><span class="tag">каждый месяц</span></a>
+  </div>
+</section>
+
+<section id="qr">
+  <h2>Ссылка на эту страницу</h2>
+  <div class="qrrow">
+    <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 222 222" role="img" aria-label="QR-код сайта" class="segno"><path transform="scale(6)" class="qrline" stroke="#5b1459" d="M2 2.5h7m2 0h1m1 0h1m1 0h1m4 0h1m2 0h2m3 0h7m-33 1h1m5 0h1m1 0h1m2 0h2m3 0h3m2 0h1m2 0h1m1 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h2m4 0h5m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h5m1 0h1m1 0h3m1 0h2m4 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m2 0h1m1 0h2m1 0h3m1 0h4m1 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m2 0h1m3 0h1m1 0h1m4 0h1m3 0h1m1 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-25 1h3m1 0h1m2 0h2m2 0h1m2 0h3m-25 1h1m5 0h1m1 0h1m2 0h3m3 0h1m1 0h2m1 0h1m2 0h2m2 0h3m-32 1h1m2 0h2m2 0h1m2 0h6m1 0h1m1 0h1m1 0h3m4 0h4m-32 1h3m3 0h1m2 0h2m1 0h4m1 0h1m4 0h1m1 0h1m1 0h1m1 0h1m1 0h2m-32 1h1m2 0h1m1 0h1m2 0h1m4 0h1m2 0h1m2 0h2m1 0h1m2 0h1m1 0h5m-30 1h1m1 0h1m1 0h2m3 0h1m1 0h1m3 0h2m1 0h1m2 0h1m2 0h2m3 0h1m-32 1h4m3 0h1m1 0h1m8 0h3m2 0h1m2 0h2m1 0h4m-33 1h1m1 0h6m2 0h1m1 0h1m1 0h5m2 0h2m2 0h4m1 0h2m-30 1h4m1 0h1m1 0h2m1 0h3m1 0h1m1 0h2m2 0h1m2 0h1m1 0h1m1 0h2m1 0h1m-30 1h2m1 0h1m1 0h1m4 0h1m1 0h1m1 0h1m4 0h1m2 0h1m1 0h2m3 0h1m-33 1h1m1 0h4m2 0h3m1 0h1m1 0h3m2 0h3m1 0h1m1 0h2m2 0h2m1 0h1m-32 1h1m1 0h1m1 0h3m2 0h1m3 0h6m3 0h2m2 0h1m1 0h2m1 0h1m-32 1h1m2 0h2m1 0h3m6 0h1m1 0h1m4 0h4m1 0h5m-27 1h5m2 0h2m3 0h3m1 0h1m1 0h1m2 0h3m1 0h1m-32 1h3m5 0h1m1 0h1m1 0h3m3 0h2m2 0h2m4 0h1m-29 1h1m1 0h1m1 0h1m1 0h1m2 0h3m5 0h2m1 0h3m1 0h1m2 0h2m1 0h2m-32 1h1m1 0h1m2 0h1m4 0h4m1 0h2m3 0h1m1 0h1m1 0h3m2 0h2m1 0h1m-33 1h2m1 0h4m1 0h1m1 0h1m3 0h1m1 0h1m3 0h1m2 0h6m3 0h1m-25 1h2m1 0h3m1 0h3m1 0h2m1 0h1m1 0h1m3 0h1m1 0h1m1 0h1m-33 1h7m3 0h3m1 0h4m2 0h5m1 0h1m1 0h1m1 0h2m-32 1h1m5 0h1m6 0h2m2 0h2m4 0h2m3 0h3m-31 1h1m1 0h3m1 0h1m3 0h1m1 0h5m2 0h1m2 0h1m1 0h6m1 0h2m-33 1h1m1 0h3m1 0h1m2 0h1m1 0h4m3 0h2m4 0h2m1 0h6m-33 1h1m1 0h3m1 0h1m3 0h3m2 0h1m1 0h1m1 0h2m1 0h3m2 0h2m1 0h3m-33 1h1m5 0h1m7 0h1m3 0h1m1 0h1m2 0h1m1 0h6m-31 1h7m1 0h2m4 0h2m1 0h1m1 0h1m3 0h5m3 0h1"/></svg></div>
+    <p class="lead">Наведите камеру телефона, чтобы открыть сайт. Этот код можно распечатать и повесить в процедурных.<br><span class="url">spbtrader-interstellar.github.io/personel-vkk</span></p>
+  </div>
+</section>
+
+<footer>Сайт только для просмотра. Записи — на бумаге, в папках 1 и 2 у главного врача. Данных пациентов и личных данных сотрудников здесь нет.</footer>
+</div>
+
+</body>
+</html>
