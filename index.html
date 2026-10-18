@@ -161,7 +161,7 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
   <p class="sub">Доска главного врача и справочник для сотрудников. Здесь ничего не заполняют: записи ведутся на бумаге в папках у главного врача, сайт показывает порядок дел и ссылки.</p>
   <span class="upd">Обновлено 18.10.2026 · система начинает работу 02.11.2026</span>
   <nav class="jump" aria-label="Разделы">
-    <a href="#now">Светофор</a><a href="#tasks">Задачи</a><a href="#journal">Журнал 62-2</a><a href="#cal">Календарь</a><a href="#month">Ритм месяца</a><a href="#incident">Если случилось</a><a href="#who">Кто за что</a><a href="#changes">Изменения</a><a href="#docs">Документы</a>
+    <a href="#now">Светофор</a><a href="#tasks">Задачи</a><a href="journal.html">Журналы</a><a href="#cal">Календарь</a><a href="#month">Ритм месяца</a><a href="#incident">Если случилось</a><a href="#who">Кто за что</a><a href="#changes">Изменения</a><a href="#docs">Документы</a>
   </nav>
 </header>
 
@@ -314,13 +314,14 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
 </section>
 
 <section id="journal">
-  <h2>🧰 Электронный журнал укладки (62-2) · пилот</h2>
+  <h2>🧰 Электронные журналы · пилот</h2>
   <p class="lead">Главный врач отмечает проверку кнопкой в Telegram-группе (✅ всё в порядке · ⚠️ замечание · ⏰ отложить на неделю) — запись сразу попадает в таблицу, сайт показывает её при открытии (задержка до 5 минут). На время пилота основной — бумажный журнал 62-2. Записи «ТЕСТ» — учебные.</p>
   <p class="live" id="jlive">Загружаю данные из таблицы…</p>
   <h3 style="margin:4px 0 0;font-size:16px">Сейчас в Telegram</h3>
   <ul class="pend" id="jpend"><li class="plan">—</li></ul>
-  <h3 style="margin:4px 0 0;font-size:16px">Записи журнала</h3>
+  <h3 style="margin:4px 0 0;font-size:16px">Последние записи</h3>
   <ul class="jlist" id="jrows"><li>—</li></ul>
+  <a class="btn" href="journal.html#62-2">Открыть журнал полностью →</a>
 </section>
 
 <section id="cal">
@@ -471,7 +472,7 @@ Promise.all([get(G.tasks),get(G.btn),get(G.j622)]).then(function(d){
   else if(st.indexOf('⚠')==0||st=='замечание')setTask(n,'note','замечание');});
  /* журнал 62-2 */
  var rows=jr.slice(4).filter(function(r){return r[0];});
- document.getElementById('jrows').innerHTML=rows.length?rows.slice().reverse().map(function(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]);
+ document.getElementById('jrows').innerHTML=rows.length?rows.slice().reverse().slice(0,3).map(function(r){var t=/ТЕСТ/i.test(r[1]),w=/замечание/.test(r[3]);
   return '<li class="'+(t?'test ':'')+(w?'warn':'')+'"><b>№ '+esc(r[0])+' · '+esc(r[3])+'</b> <span class="per">'+esc(r[1])+'</span><small>'+esc(r[5])+' · '+esc(r[6])+'</small>'+(r[4]?'<span class="rem">'+esc(r[4])+'</span>':'')+'</li>';}).join(''):'<li>Записей пока нет</li>';
  /* плитка 62-2 — по последней не учебной записи */
  var real=rows.filter(function(r){return !/ТЕСТ/i.test(r[1]);}).pop();
