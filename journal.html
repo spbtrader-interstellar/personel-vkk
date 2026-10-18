@@ -148,11 +148,14 @@ ol.tasks{list-style:none;margin:0 0 8px;padding:0}
 .task.late{border-left-color:var(--stop)} .task.late .ts{background:var(--stop-bg);color:var(--stop)}
 @media (max-width:460px){.task{grid-template-columns:40px minmax(0,1fr)}.tw{grid-column:2;grid-row:2;justify-self:start}.ts{grid-column:2;grid-row:2;justify-self:end}}
 
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:none;font:600 15px var(--body);padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;white-space:nowrap}
 .tabs button[aria-selected="true"]{background:var(--plum);border-color:var(--plum);color:var(--bg)}
-.tabs button:disabled{opacity:.5;cursor:default}
+.tabs button.soonb{color:var(--muted);border-style:dashed;font-weight:500}
+.tabs button.soonb[aria-selected="true"]{color:var(--bg);border-style:solid}
+@media (max-width:460px){.tabs button{font-size:14px;padding:7px 11px}}
+.panel.soonp{background:var(--soft)}
 .tabs button:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 .back{font-size:14px;color:var(--plum);text-decoration:none;font-weight:600;align-self:flex-start}
 .back:hover{color:var(--pink)}
@@ -209,11 +212,19 @@ var BASE='https://docs.google.com/spreadsheets/d/e/2PACX-1vTznMTE4JARrDUguO9Qu5o
 var BTN=3102, PAGE=20;
 /* Журналы: gid появляется, когда вкладку опубликуют */
 var J=[
- {id:'62-2',tab:'🧰 Укладка',title:'Журнал проверки укладки для экстренной помощи (62-2)',gid:3101},
- {id:'62-1',tab:'🌡️ Холодильник',title:'Журнал проверки температуры холодильника (62-1)',gid:null},
- {id:'62-3',tab:'🧹 Уборки',title:'Журнал проверки генеральных уборок (62-3)',gid:null},
- {id:'67',tab:'⏳ Время главного врача',title:'Время главного врача: план и факт (67)',gid:null}
+ {id:'62-2',tab:'🧰 Укладка',title:'Журнал проверки укладки для экстренной помощи (62-2)',gid:3101,freq:'раз в месяц до 5-го и после каждого использования',who:'✱ главный врач'},
+ {id:'62-1',tab:'🌡️ Холодильник',title:'Журнал проверки температуры холодильника (62-1)',gid:null,freq:'раз в месяц до 5-го',who:'✱ главный врач',desc:'Проверка, что журнал у холодильника ведётся каждый день и температура в норме.'},
+ {id:'62-3',tab:'🧹 Уборки',title:'Журнал проверки генеральных уборок (62-3)',gid:null,freq:'раз в месяц',who:'✱ главный врач',desc:'Сверка, что генеральные уборки идут по графику.'},
+ {id:'67',tab:'⏳ Время главного врача',title:'Время главного врача: план и факт (67)',gid:null,freq:'последний день месяца',who:'✱ главный врач',desc:'Часы за месяц: «✅ Как в плане» или «✏️ Другое число»; отдельно — работа сверх плана.'},
+ {id:'60',tab:'📁 Обход управляющего',title:'Обход по описи папки 2 (60)',gid:null,freq:'раз в месяц до 10-го',who:'▶ управляющий',desc:'Управляющий проходит все журналы по описи и отмечает, что отметки за месяц на месте.'},
+ {id:'63-1',tab:'✅ Плановые проверки',title:'Отчёты плановых проверок (63-1)',gid:null,freq:'раз в квартал до 18-го числа последнего месяца',who:'✱ главный врач',desc:'Итог плановой проверки: кабинеты, стенд и сайт, медицинские карты — без номеров карт и данных пациентов.'},
+ {id:'63-2',tab:'📢 Стенд и сайт',title:'Проверка стенда и сайта (63-2)',gid:null,freq:'раз в квартал',who:'✱ главный врач',desc:'Информация для пациентов на стенде и сайте клиники актуальна.'},
+ {id:'65-3',tab:'⚙️ Оборудование',title:'Оборудование: удостоверения, договоры, ТО (65-3)',gid:null,freq:'по сроку ТО и при покупке аппарата',who:'▶ управляющий',desc:'Отметки о техобслуживании и поверке аппаратов, без данных сотрудников.'},
+ {id:'66-4',tab:'📌 Прочие события',title:'Прочие события (66-4)',gid:null,freq:'по событию, в тот же день',who:'▶ управляющий',desc:'Сломалось, не работает, не сделано — что случилось и что сделали. Без данных пациентов.'},
+ {id:'49-07Б',tab:'✏️ Тренировка «Анафилаксия»',title:'Тренировка и тест «Анафилаксия» (49-07Б)',gid:null,freq:'раз в год и каждому новому медработнику',who:'✱ главный врач',desc:'Дата тренировки и итог: сколько человек прошли тест. Фамилии и баллы — только на бумаге.'},
+ {id:'64-1',tab:'📊 Итоги',title:'Итоги внутреннего контроля (64-1)',gid:null,freq:'раз в полгода и в конце года',who:'▶ ✱ оба',desc:'Отметка, что итоги за период подписаны; цифры — только сводные.'}
 ];
+J.forEach(function(j){j.on=!!j.gid;});
 function fetchT(u){var c=window.AbortController?new AbortController():null;var t=setTimeout(function(){if(c)c.abort();},12000);return fetch(u,c?{signal:c.signal}:{}).finally(function(){clearTimeout(t);});}
 function csv(t){var r=[],row=[],f='',q=false;for(var i=0;i<t.length;i++){var c=t[i];
  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
@@ -234,13 +245,13 @@ function panel(cls,icon,title,items,empty,cnt){return '<div class="panel '+cls+'
 var tabs=document.getElementById('tabs'),body=document.getElementById('jbody'),live=document.getElementById('jlive');
 var cur=null,shown=PAGE;
 J.forEach(function(j){var b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.id='t-'+j.id;
- b.textContent=j.tab+(j.gid?'':' · скоро');b.disabled=!j.gid;b.onclick=function(){show(j.id,true);};tabs.appendChild(b);});
-function show(id,push){var j=J.filter(function(x){return x.id==id&&x.gid;})[0]||J[0];cur=j;shown=PAGE;
+ b.textContent=j.tab+(j.on?'':' · скоро');if(!j.on)b.className='soonb';b.onclick=function(){show(j.id,true);};tabs.appendChild(b);});
+function show(id,push){var j=J.filter(function(x){return x.id==id;})[0]||J[0];cur=j;shown=PAGE;
  [].forEach.call(tabs.children,function(b){b.setAttribute('aria-selected',b.id=='t-'+j.id?'true':'false');});
  document.getElementById('t-'+j.id).scrollIntoView({block:'nearest',inline:'nearest'});
  if(push)history.replaceState(null,'','#'+j.id);try{localStorage.setItem('vkk-j',j.id);}catch(e){}
  document.getElementById('jtitle').textContent=j.title;render();}
-function render(){var j=cur;live.textContent='Загружаю…';
+function render(){var j=cur;if(!j.on){live.textContent='';document.getElementById('jcount').textContent='';body.innerHTML='<div class="panel soonp"><h3>🔜 Скоро</h3><p class="empty"><b>'+esc(j.desc||'')+'</b></p><p class="empty">Как часто: '+esc(j.freq||'')+' · кто отмечает: '+esc(j.who||'')+'</p><p class="empty">Пока журнал ведётся на бумаге в папке у главного врача — как обычно. Вкладка включится, когда подключим кнопки в Telegram.</p></div>';return;}live.textContent='Загружаю…';
  Promise.all([get(j.gid),get(BTN)]).then(function(d){if(cur!==j)return;
   var rows=d[0].slice(4).filter(function(r){return r[0];}).reverse();
   var pend=d[1].slice(4).filter(function(r){return r[0]&&String(r[3]).indexOf(j.id)==0;});
